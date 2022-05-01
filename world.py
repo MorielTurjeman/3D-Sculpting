@@ -10,7 +10,9 @@ class World:
     def __init__(self):
         self._scale = np.identity(4)
         self._position = np.identity(4)
-        self._rotation = np.identity(4)
+        self._rotation_xy = np.identity(4)
+        self._rotation_xz = np.identity(4)
+        self._rotation_yz = np.identity(4)
 
     def set_scale(self, scale: float):
         self._scale = np.matrix([
@@ -33,21 +35,21 @@ class World:
             raise ValueError("Invalid rotation value")
 
         if axis == self.ROTATE_XY:
-            self._rotation = np.matrix(
+            self._rotation_xy = np.matrix(
                 [[math.cos(rad), -1 * math.sin(rad), 0, 0],
                  [math.sin(rad), math.cos(rad), 0, 0],
                  [0, 0, 1, 0],
                  [0, 0, 0, 1]], dtype=np.float32
             )
         elif axis == self.ROTATE_YZ:
-            self._rotation = np.matrix([
+            self._rotation_yz = np.matrix([
                 [math.cos(rad), 0, -1 * math.sin(rad), 0],
                 [0, 1, 0, 0],
                 [math.sin(rad), 0, math.cos(rad), 0],
                 [0, 0, 0, 1]
             ], dtype=np.float32)
         elif axis == self.ROTATE_XZ:
-            self._rotation = np.matrix([
+            self._rotation_xz = np.matrix([
                 [1, 0, 0, 0],
                 [0, math.cos(rad), -1 * math.sin(rad), 0],
                 [0, math.sin(rad), math.cos(rad), 0],
@@ -55,4 +57,4 @@ class World:
             ], dtype=np.float32)
 
     def get_world_translation(self):
-        return self._position * self._rotation * self._scale
+        return self._position * (self._rotation_xz * self._rotation_xy * self._rotation_yz) * self._scale

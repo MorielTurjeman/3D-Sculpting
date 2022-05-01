@@ -25,6 +25,8 @@ class Framebuffer(ShaderCodlet):
         self.camera = camera
         self.texture = texture
         self.rotation_scale = 0
+        self.width = None
+        self.height = None
 
         self.fbo = GL.glGenFramebuffers(1)
         self.vbo = GL.glGenBuffers(1)
@@ -51,6 +53,10 @@ class Framebuffer(ShaderCodlet):
                             model.get_index_array(),
                             GL.GL_STATIC_DRAW)
 
+    def update_dimensions(self, width, height):
+        self.width = width
+        self.height = height
+
     def add_model(self, model: Model):
         self.models.append(model)
 
@@ -72,7 +78,8 @@ class Framebuffer(ShaderCodlet):
     def render(self):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-        translationMatrix = self.projection.get_projection_matrix() * \
+        translationMatrix = \
+            self.projection.get_projection_matrix(self.width, self.height) * \
             self.camera.get_matrix() * \
             self.world.get_world_translation()
 
@@ -96,7 +103,8 @@ class Framebuffer(ShaderCodlet):
     def picking_render(self, texture: PickingTexture):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        translationMatrix = self.projection.get_projection_matrix() * \
+        translationMatrix = \
+            self.projection.get_projection_matrix(self.width, self.height) * \
             self.camera.get_matrix() * \
             self.world.get_world_translation()
 
@@ -118,7 +126,11 @@ class Framebuffer(ShaderCodlet):
             (window_coord[1] - 400) / 400, 0, 1
             ]
         projection_view_matrix = np.linalg.inv(
-            np.dot(self.projection.get_projection_matrix(), self.camera.get_matrix()))
+            np.dot(
+                   self.projection.get_projection_matrix(
+                                                         self.width,
+                                                         self.height),
+                   self.camera.get_matrix()))
 
         world_coord = np.dot(projection_view_matrix, window_coord)
         world_coord = np.array([
@@ -144,7 +156,7 @@ class Framebuffer(ShaderCodlet):
         ])
 
         model_coord = model_coord / model_coord[3]
-        
+
 
         return model_coord
 

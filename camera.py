@@ -19,7 +19,7 @@ class Camera:
 
         self.init_camera()
 
-        GLUT.glutWarpPointer(self.mouse_x, self.mouse_y)
+        # GLUT.glutWarpPointer(self.mouse_x, self.mouse_y)
 
     def init_camera(self):
         h_target = np.array(
@@ -38,8 +38,8 @@ class Camera:
 
         self.angle_v = np.rad2deg(math.asin(self.target[1]))
 
-        self.mouse_x = int(GLUT.glutGet(GLUT.GLUT_WINDOW_WIDTH) / 2)
-        self.mouse_y = int(GLUT.glutGet(GLUT.GLUT_WINDOW_HEIGHT) / 2)
+        # self.mouse_x = int(GLUT.glutGet(GLUT.GLUT_WINDOW_WIDTH) / 2)
+        # self.mouse_y = int(GLUT.glutGet(GLUT.GLUT_WINDOW_HEIGHT) / 2)
 
         return
 

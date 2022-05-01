@@ -10,12 +10,15 @@ class Projection:
     def set_projection(self, fov_deg: float):
         self.fov_rad = np.deg2rad(fov_deg)
 
-    def get_projection_matrix(self):
-        ar = GLUT.glutGet(GLUT.GLUT_WINDOW_WIDTH) / \
-            GLUT.glutGet(GLUT.GLUT_WINDOW_HEIGHT)
+    def get_projection_matrix(self, width=None, height=None):
+        if not width:
+            width = GLUT.glutGet(GLUT.GLUT_WINDOW_WIDTH)
+        if not height:
+            height = GLUT.glutGet(GLUT.GLUT_WINDOW_HEIGHT)
+        ar = width / height
 
         near_z = 1
-        far_z = 3
+        far_z = 10
         z_range = near_z - far_z
         A = (-far_z - near_z) / z_range
         B = (2 * near_z * far_z) / z_range

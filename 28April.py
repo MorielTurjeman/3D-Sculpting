@@ -11,6 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtOpenGL
 
 from gluttut import OpenGLEngine
+from OpenGL.GL import *
 
 
 class Ui_MainWindow(object):
@@ -20,7 +21,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow) #
         self.centralwidget.setObjectName("centralwidget") #
         self.pushButton = QtWidgets.QPushButton(self.centralwidget) #
-        self.pushButton.setGeometry(QtCore.QRect(420, 510, 113, 32)) #
+        self.pushButton.setGeometry(QtCore.QRect(420, 720, 113, 32)) #
         self.pushButton.setObjectName("pushButton") #
         self.horizontalSlider = QtWidgets.QSlider(self.centralwidget) #
         self.horizontalSlider.setGeometry(QtCore.QRect(290, 411, 411, 41)) #
@@ -88,7 +89,7 @@ class Ui_MainWindow(object):
         self.openGLWidget.update()
     
     def z_rotation_event(self):
-        deg = self.horizontalSlider_2.value()
+        deg = self.horizontalSlider_3.value()
         self.openGLWidget.openGlEngine.rotate_xy(deg)
         self.openGLWidget.update()
 
@@ -104,22 +105,34 @@ class GlutTutWidget(QtOpenGL.QGLWidget):
         self.glformat.setSampleBuffers(True)
         super(GlutTutWidget, self).__init__(self.glformat)
         self.setParent(parent)
-        self.setMinimumSize(400, 400)
+        # self.setMinimumSize(400, 400)
         self.openGlEngine = None
 
-    def initializeGL(self) -> None:
+    def initializeGL(self):
+        print(self.format())
         self.openGlEngine = OpenGLEngine()
-
-    def showEvent(self, a0) -> None:
+        # self.context().device().
+        
+    def showEvent(self, a0):
         self.visible = True
 
-    def paintGL(self) -> None:
-        if self.visible:
-            size = self.size()
-            self.openGlEngine.framebuffer.update_dimensions(size.width(),
-                                                            size.height())
-            self.openGlEngine.render_scene()
+    def paintGL(self):
+        size = self.size()
+        self.openGlEngine.framebuffer.update_dimensions(size.width(),
+                                                        size.height())
+        self.openGlEngine.render_scene()
 
+
+    def resizeGL(self, w: int, h: int):
+        self.openGlEngine.framebuffer.update_dimensions(w,h)
+        glViewport(0, 0, w, h);
+        return super().resizeGL(w, h)
+
+    def minimumSizeHint(self):
+        return QtCore.QSize(50, 50)
+
+    def sizeHint(self):
+        return QtCore.QSize(400, 400)
 
 if __name__ == "__main__":
     import sys
@@ -129,4 +142,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-

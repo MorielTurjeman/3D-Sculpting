@@ -56,10 +56,11 @@ class PickingTechnique(ShaderCodlet):
         self.object_index_location = GL.glGetUniformLocation("gObjectIndex")
         self.draw_index_location = GL.glGetUniformLocation('gDrawIndex')
 
-    def render(self):
+    def render(self, width, height):
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-        translationMatrix = self.projection.get_projection_matrix() * \
+        translationMatrix = \
+            self.projection.get_projection_matrix(width, height) * \
             self.camera.get_matrix() * \
             self.world.get_world_translation()
 
@@ -79,6 +80,7 @@ class PickingTechnique(ShaderCodlet):
         GL.glDrawElements(GL.GL_TRIANGLES, 36, GL.GL_UNSIGNED_INT, None)
         GL.glDisableVertexAttribArray(0)
         GL.glDisableVertexAttribArray(1)
+
 
 class PickingTexture:
     def __init__(self):
