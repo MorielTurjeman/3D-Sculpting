@@ -16,56 +16,83 @@ from OpenGL.GL import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1000, 1000)
+        MainWindow.setObjectName("MainWindow") 
+        MainWindow.resize(1429, 830) #window size
         self.centralwidget = QtWidgets.QWidget(MainWindow) #
         self.centralwidget.setObjectName("centralwidget") #
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget) #
-        self.pushButton.setGeometry(QtCore.QRect(420, 720, 113, 32)) #
-        self.pushButton.setObjectName("pushButton") #
-        self.horizontalSlider = QtWidgets.QSlider(self.centralwidget) #
-        self.horizontalSlider.setGeometry(QtCore.QRect(290, 411, 411, 41)) #
-        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal) #
-        self.horizontalSlider.setObjectName("horizontalSlider") #
-        self.horizontalSlider.setMinimum(0)
-        self.horizontalSlider.setMaximum(360)
-        self.horizontalSlider.valueChanged.connect(self.x_rotation_event)
-        self.horizontalSlider_2 = QtWidgets.QSlider(self.centralwidget) #
-        self.horizontalSlider_2.setGeometry(QtCore.QRect(290, 460, 411, 41)) #
-        self.horizontalSlider_2.setOrientation(QtCore.Qt.Horizontal) #
-        self.horizontalSlider_2.setObjectName("horizontalSlider_2") #
-        self.horizontalSlider_2.valueChanged.connect(self.y_rotation_event)
-        self.horizontalSlider_2.setMaximum(360)
-        self.horizontalSlider_2.setMinimum(0)
-        self.label = QtWidgets.QLabel(self.centralwidget) #
-        self.label.setGeometry(QtCore.QRect(189, 420, 81, 20)) #
-        self.label.setObjectName("label") #
-        self.label_2 = QtWidgets.QLabel(self.centralwidget) #
-        self.label_2.setGeometry(QtCore.QRect(190, 470, 81, 20)) #
-        self.label_2.setObjectName("label_2") #
+
         self.openGLWidget = GlutTutWidget(self.centralwidget)
-        self.openGLWidget.setGeometry(QtCore.QRect(90, 20, 641, 391))
+        self.openGLWidget.setGeometry(QtCore.QRect(20, 10, 1221, 701)) #OpenGL window size
         self.openGLWidget.setObjectName("openGLWidget")
-        self.horizontalSlider_3 = QtWidgets.QSlider(self.centralwidget) #
-        self.horizontalSlider_3.setGeometry(QtCore.QRect(290, 510, 411, 41)) #
-        self.horizontalSlider_3.setOrientation(QtCore.Qt.Horizontal) #
-        self.horizontalSlider_3.setObjectName("horizontalSlider_3") #
-        self.horizontalSlider_3.valueChanged.connect(self.z_rotation_event)
-        self.horizontalSlider_3.setMaximum(360)
-        self.horizontalSlider_3.setMinimum(0)
-        self.label_3 = QtWidgets.QLabel(self.centralwidget) #
-        self.label_3.setGeometry(QtCore.QRect(190, 520, 81, 20)) #
-        self.label_3.setObjectName("label_3") #
+
+        self.x_vertical_slider = QtWidgets.QSlider(self.centralwidget) #
+        self.x_vertical_slider.setGeometry(QtCore.QRect(1380, 180, 21, 441)) #
+        self.x_vertical_slider.setOrientation(QtCore.Qt.Vertical) #
+        self.x_vertical_slider.setObjectName("x_vertical_slider") #
+        self.x_vertical_slider.setMinimum(0)
+        self.x_vertical_slider.setMaximum(360)
+        self.x_vertical_slider.valueChanged.connect(self.x_rotation_event)
+
+        self.y_vertical_slider = QtWidgets.QSlider(self.centralwidget) #
+        self.y_vertical_slider.setGeometry(QtCore.QRect(1340, 180, 21, 441)) #
+        self.y_vertical_slider.setOrientation(QtCore.Qt.Vertical) #
+        self.y_vertical_slider.setObjectName("verticalSlider_2") #
+        self.y_vertical_slider.valueChanged.connect(self.y_rotation_event)
+        self.y_vertical_slider.setMaximum(360)
+        self.y_vertical_slider.setMinimum(0)
+
+        self.z_vertical_slider = QtWidgets.QSlider(self.centralwidget) #
+        self.z_vertical_slider.setGeometry(QtCore.QRect(1300, 180, 21, 441)) #
+        self.z_vertical_slider.setOrientation(QtCore.Qt.Vertical) #
+        self.z_vertical_slider.setObjectName("verticalSlider_3") #
+        self.z_vertical_slider.valueChanged.connect(self.z_rotation_event)
+        self.z_vertical_slider.setMaximum(360)
+        self.z_vertical_slider.setMinimum(0)
+
+        self.x_label = QtWidgets.QLabel(self.centralwidget) #
+        self.x_label.setGeometry(QtCore.QRect(1300, 630, 21, 16)) #
+        self.x_label.setObjectName("x_label") #
+
+        self.y_label = QtWidgets.QLabel(self.centralwidget) #
+        self.y_label.setGeometry(QtCore.QRect(1350, 630, 21, 16)) #
+        self.y_label.setObjectName("y_label") #
+
+        self.z_label = QtWidgets.QLabel(self.centralwidget) #
+        self.z_label.setGeometry(QtCore.QRect(1390, 630, 21, 16)) #
+        self.z_label.setObjectName("z_label") #
+
+        self.rotation_label = QtWidgets.QLabel(self.centralwidget)
+        self.rotation_label.setGeometry(QtCore.QRect(1320, 150, 60, 16))
+        self.rotation_label.setObjectName("rotation_label")
+
+        self.zoom_label = QtWidgets.QPushButton(self.centralwidget)
+        self.zoom_label.setGeometry(QtCore.QRect(1290, 30, 113, 32))
+        self.zoom_label.setObjectName("zoom_label")
+
+        self.stretch_label = QtWidgets.QPushButton(self.centralwidget)
+        self.stretch_label.setGeometry(QtCore.QRect(1290, 60, 113, 32))
+        self.stretch_label.setObjectName("stretch_label")
+
+        self.scale_label = QtWidgets.QPushButton(self.centralwidget)
+        self.scale_label.setGeometry(QtCore.QRect(1290, 90, 113, 32))
+        self.scale_label.setObjectName("scale_label")
+
+        self.mouse_radio_button = QtWidgets.QRadioButton(self.centralwidget)
+        self.mouse_radio_button.setGeometry(QtCore.QRect(1280, 680, 99, 20))
+        self.mouse_radio_button.setObjectName("mouse_radio_button")
+
+        self.hand_radio_button = QtWidgets.QRadioButton(self.centralwidget)
+        self.hand_radio_button.setGeometry(QtCore.QRect(1280, 700, 121, 20))
+        self.hand_radio_button.setObjectName("radioButton_2")
         
-        MainWindow.setCentralWidget(self.centralwidget) #
-        
-        self.menubar = QtWidgets.QMenuBar(MainWindow) #
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21)) #
-        self.menubar.setObjectName("menubar") #
-        MainWindow.setMenuBar(self.menubar) #
-        self.statusbar = QtWidgets.QStatusBar(MainWindow) #
-        self.statusbar.setObjectName("statusbar") #
-        MainWindow.setStatusBar(self.statusbar) #
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1429, 24))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow) #
         QtCore.QMetaObject.connectSlotsByName(MainWindow) #
@@ -73,23 +100,29 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate #
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow")) #
-        self.pushButton.setText(_translate("MainWindow", "Zoom")) #
-        self.label.setText(_translate("MainWindow", "X Rotation")) #
-        self.label_2.setText(_translate("MainWindow", "Y Rotation")) #
-        self.label_3.setText(_translate("MainWindow", "Z Rotation")) #
+
+        self.x_label.setText(_translate("MainWindow", "X"))
+        self.y_label.setText(_translate("MainWindow", "Y"))
+        self.z_label.setText(_translate("MainWindow", "Z"))
+        self.rotation_label.setText(_translate("MainWindow", "Rotation:"))
+        self.zoom_label.setText(_translate("MainWindow", "Zoom"))
+        self.stretch_label.setText(_translate("MainWindow", "Strech"))
+        self.scale_label.setText(_translate("MainWindow", "Scale"))
+        self.mouse_radio_button.setText(_translate("MainWindow", "Mouse"))
+        self.hand_radio_button.setText(_translate("MainWindow", "Hand gestures"))
 
     def x_rotation_event(self):
-        deg = self.horizontalSlider.value()
+        deg = self.x_vertical_slider.value()
         self.openGLWidget.openGlEngine.rotate_yz(deg)
         self.openGLWidget.update()
 
     def y_rotation_event(self):
-        deg = self.horizontalSlider_2.value()
+        deg = self.y_vertical_slider.value()
         self.openGLWidget.openGlEngine.rotate_xz(deg)
         self.openGLWidget.update()
     
     def z_rotation_event(self):
-        deg = self.horizontalSlider_3.value()
+        deg = self.z_vertical_slider.value()
         self.openGLWidget.openGlEngine.rotate_xy(deg)
         self.openGLWidget.update()
 
