@@ -176,7 +176,7 @@ def main():
                     keypoint_classifier_labels[hand_sign_id],
                     point_history_classifier_labels[most_common_fg_id[0][0]],
                 )
-                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id])
+                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12])
         else:
             point_history.append([0, 0])
 

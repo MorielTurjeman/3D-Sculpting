@@ -5,15 +5,13 @@ screen_size = (1920, 1080)
 
 
 
-
-
-def hand_gesture_to_action(hand_gesture):
+def hand_gesture_to_action(hand_gesture,landmark_middel_tip):
     if hand_gesture == 'Scale_IN':
-        print("Scale_IN")
+        print("Scale_IN",landmark_middel_tip)
     if hand_gesture == 'Scale_OUT':
-        print("Scale_OUT")
+        print("Scale_OUT",landmark_middel_tip)
     if hand_gesture == 'Rotate_LEFT':
-        print('Rotate_LEFT')
+        print('Rotate_LEFT',landmark_middel_tip)
     if hand_gesture == 'Rotate_RIGHT':
         print('Rotate_RIGHT')
     if hand_gesture == 'Rotate_UP':
@@ -30,7 +28,7 @@ def hand_gesture_to_action(hand_gesture):
 
 class Hand_handler:
     def __init__(self, scene_viewer):
-        self.SceneViewer = scene_viewer
+        self.scene_viewer = scene_viewer
         self.state = "None"
 
     def rotate(self,state,  x=0, y=0):
@@ -38,10 +36,10 @@ class Hand_handler:
         y_ = int(y / camera_size[1] * screen_size[1])
 
         if self.state != state: #first time in state
-            self.UI.on_mouse_press(x_, y_, pyglet.window.mouse.LEFT, None)
+            self.scene_viewer.on_mouse_press(x_, y_, pyglet.window.mouse.LEFT, None)
             self.state = state
         else:
-            self.UI.on_mouse_drag(x_, y_, None, None, pyglet.window.mouse.LEFT, None)
+            self.scene_viewer.on_mouse_drag(x_, y_, None, None, pyglet.window.mouse.LEFT, None)
 
 
     def scale(self ,state,  x=0, y=0):
@@ -49,7 +47,7 @@ class Hand_handler:
         y_ = int(y / camera_size[1] * screen_size[1])
 
         if self.state != state: #first time in state
-            self.UI.on_mouse_press(x_, y_, pyglet.window.mouse.LEFT, None)
+            self.scene_viewer.on_mouse_press(x_, y_, pyglet.window.mouse.LEFT, None)
             self.state = state
         else:
             #self.UI.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
