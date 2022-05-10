@@ -24,6 +24,7 @@ from imgui.integrations.pyglet import PygletRenderer
 
 import fcl
 import imgui
+# import 
 import dearpygui.dearpygui as dpg
 from trimesh.viewer.trackball import Trackball
 
@@ -61,13 +62,19 @@ class UI:
        
 
     def render(self):
+        
+        
+        
         imgui.render()
+
         io = imgui.get_io()
-        io.fonts.add_font_from_file_ttf("Roboto-Black.ttf", 20)
+        
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
         scene: Scene = self.window.scene
+        # io.fonts.add_font_from_file_ttf("Roboto-Black.ttf", 20)
         imgui.begin("Test Window", flags=imgui.WINDOW_MENU_BAR)
+        # io.fonts.add_font_from_file_ttf("Roboto-Black.ttf", 20)
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item('Capsule', None, False, True)
