@@ -9,7 +9,9 @@ Works on all major platforms: Windows, Linux, and OSX.
 """
 import collections
 from curses import window
-from turtle import update
+from turtle import update, window_height
+from cv2 import WINDOW_NORMAL
+from django.forms import widgets
 from graphviz import view
 import numpy as np
 
@@ -20,7 +22,7 @@ import pyglet
 from pyglet.window import Window
 from imgui.integrations.pyglet import PygletRenderer
 
-
+import fcl
 import imgui
 import dearpygui.dearpygui as dpg
 from trimesh.viewer.trackball import Trackball
@@ -30,9 +32,11 @@ import trimesh.collision
 import trimesh.ray
 from trimesh import Trimesh, util
 from trimesh import rendering, Scene
+from trimesh.scene import Camera
 
 from trimesh.visual import to_rgba
 from trimesh.transformations import translation_matrix
+
 pyglet.options['shadow_window'] = True
 
 import pyglet.gl as gl  # NOQA
@@ -92,9 +96,7 @@ class UI:
 
         imgui.end()
         imgui.end_frame()
-        
     
-
 
 class SceneViewer(pyglet.window.Window):
 
@@ -752,7 +754,9 @@ class SceneViewer(pyglet.window.Window):
             self.maximize()
         elif symbol == pyglet.window.key.F:
             self.toggle_fullscreen()
-
+        elif symbol == pyglet.window.key.T:
+            self.collision()
+            
         if symbol in [
                 pyglet.window.key.LEFT,
                 pyglet.window.key.RIGHT,
@@ -768,6 +772,46 @@ class SceneViewer(pyglet.window.Window):
             elif symbol == pyglet.window.key.UP:
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
+
+
+    def collision(self):
+        scene: Scene = self.scene
+        camera: Camera = scene.camera
+        z_range = camera.z_near - camera.z_far
+        A = (-camera.z_far - camera.z_near) / z_range
+        B = (2 * camera.z_near * camera.z_far) / z_range
+        modelView = np.matrix(
+            [
+                [1 / np.arctan(camera.fov[0]/2), 0, 0, 0],
+                [0, 1/ np.tan(camera.fov[1]/2), 0, 0],
+                [0, 0, A, B],
+                [0, 0, 1, 0]
+            ], dtype=np.float32
+        )
+        width, height = self.get_viewport_size()
+        camera_transform = np.matrix(scene.camera_transform, dtype=np.float32)
+        print(self._mouse_x, self._mouse_y)
+        window_vector = [
+            (self._mouse_x - width / 2) / (width / 2),
+            (self._mouse_y - height / 2) / (height / 2),
+            0,
+            1
+        ]
+        project_view = np.linalg.inv(np.dot(modelView, camera_transform))
+        world_coord = np.dot(project_view, window_vector)
+        sphere_coord = [
+            world_coord[0, 0],
+            world_coord[0, 1],
+            0
+        ]
+        print(sphere_coord)
+        scene.add_geometry(trimesh.primitives.Sphere(center=sphere_coord))
+        self._update_meshes()
+        # world_coord = world_coord / world_coord[0, 3]
+        # print(world_coord)
+        
+
+
 
     def on_draw(self):
         """
