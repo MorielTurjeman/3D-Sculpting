@@ -97,5 +97,4 @@ class Camera:
             [[*U, self.pos[0]],
              [*V, self.pos[1]],
              [*N, self.pos[2]],
-             [0, 0, 0, 1]], dtype=np.float32
         )

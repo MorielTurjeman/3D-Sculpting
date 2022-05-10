@@ -8,12 +8,8 @@ Trimesh, Scene, PointCloud, and Path objects.
 Works on all major platforms: Windows, Linux, and OSX.
 """
 import collections
-from turtle import update
 # from graphviz import view
 import numpy as np
-
-# import dearpygui.dearpygui as dpg
-# from pygame import BUTTON_X1, font
 
 import pyglet
 from pyglet.window import Window
@@ -21,7 +17,6 @@ from imgui.integrations.pyglet import PygletRenderer
 
 
 import imgui
-#import dearpygui.dearpygui as dpg
 from trimesh.viewer.trackball import Trackball
 
 import trimesh
@@ -32,6 +27,8 @@ from trimesh import rendering, Scene
 
 from trimesh.visual import to_rgba
 from trimesh.transformations import translation_matrix
+from hand_gesture_recognition.hand_functions import *
+
 pyglet.options['shadow_window'] = True
 
 import pyglet.gl as gl  # NOQA
@@ -1007,10 +1004,9 @@ def render_scene(scene,
     return render
 
 
-
 # mesh=trimesh.primitives.Sphere(radius=0.1, center=[2,2,2])
 box=trimesh.primitives.Box()
 scene = Scene(box)
 viewer = SceneViewer(scene)
-pyglet.app.run()
-
+# handgest=Hand_handler(viewer)
+pyglet.app.run() ###add last in the main of coral
