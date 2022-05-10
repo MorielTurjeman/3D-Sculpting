@@ -57,11 +57,13 @@ class UI:
         
         self.window: SceneViewer = window
         self.test_input = 0
+        
        
 
     def render(self):
         imgui.render()
         io = imgui.get_io()
+        io.fonts.add_font_from_file_ttf("Roboto-Black.ttf", 20)
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
         scene: Scene = self.window.scene
@@ -73,7 +75,7 @@ class UI:
                     scene.geometry.popitem()
                     capsule = trimesh.primitives.Capsule()
                     scene.add_geometry(capsule)
-                    self.window.reset_view()                
+                    self.window.reset_view()
                 clicked, selected = imgui.menu_item("Cube")
                 if clicked:
                     scene.geometry.popitem()
