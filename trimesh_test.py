@@ -52,6 +52,7 @@ class UI:
         self.impl = PygletRenderer(window)
         imgui.new_frame()
         imgui.end_frame()
+        
 
         # Window variables
         
