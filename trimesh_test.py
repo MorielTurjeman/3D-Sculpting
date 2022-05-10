@@ -8,13 +8,12 @@ Trimesh, Scene, PointCloud, and Path objects.
 Works on all major platforms: Windows, Linux, and OSX.
 """
 import collections
-from curses import window
 from turtle import update
-from graphviz import view
+# from graphviz import view
 import numpy as np
 
-import dearpygui.dearpygui as dpg
-from pygame import BUTTON_X1, font
+# import dearpygui.dearpygui as dpg
+# from pygame import BUTTON_X1, font
 
 import pyglet
 from pyglet.window import Window
@@ -22,7 +21,7 @@ from imgui.integrations.pyglet import PygletRenderer
 
 
 import imgui
-import dearpygui.dearpygui as dpg
+#import dearpygui.dearpygui as dpg
 from trimesh.viewer.trackball import Trackball
 
 import trimesh
@@ -715,6 +714,7 @@ class SceneViewer(pyglet.window.Window):
 
         self.view['ball'].down(np.array([x, y]))
         self.scene.camera_transform[...] = self.view['ball'].pose
+
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         """
