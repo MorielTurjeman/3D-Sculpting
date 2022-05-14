@@ -8,6 +8,7 @@ from collections import Counter
 from collections import deque
 
 import cv2 as cv
+from cv2 import threshold
 import numpy as np
 import mediapipe as mp
 
@@ -37,7 +38,7 @@ def get_args():
     return args
 
 
-def main():
+def main(rotate):
     # Argument parsing #################################################################
     args = get_args()
 

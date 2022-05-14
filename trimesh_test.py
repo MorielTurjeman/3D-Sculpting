@@ -7,9 +7,14 @@ Trimesh, Scene, PointCloud, and Path objects.
 
 Works on all major platforms: Windows, Linux, and OSX.
 """
+from asyncio import threads
+import threading
 import collections
+from graphviz import view
+from matplotlib.pyplot import sca
 # from graphviz import view
 import numpy as np
+from app import main
 
 import pyglet
 from pyglet.window import Window
@@ -18,16 +23,21 @@ from imgui.integrations.pyglet import PygletRenderer
 
 import imgui
 from trimesh.viewer.trackball import Trackball
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 import trimesh
 import trimesh.collision
 import trimesh.ray
+import trimesh.creation
+import trimesh.remesh
 from trimesh import Trimesh, util
 from trimesh import rendering, Scene
+from trimesh.scene import Camera
 
 from trimesh.visual import to_rgba
 from trimesh.transformations import translation_matrix
-from hand_gesture_recognition.hand_functions import *
+#from hand_gesture_recognition.hand_functions import *
 
 pyglet.options['shadow_window'] = True
 
@@ -166,6 +176,9 @@ class SceneViewer(pyglet.window.Window):
         self.background = background
         # save initial camera transform
         self._initial_camera_transform = scene.camera_transform.copy()
+        self.selected_vertex = None
+        self.selected_vertex_world = None
+        self.selected_vertex_z = None
 
         # a transform to offset lines slightly to avoid Z-fighting
         self._line_offset = translation_matrix(
@@ -599,7 +612,7 @@ class SceneViewer(pyglet.window.Window):
         # case where we WANT an axis and NO vertexlist
         # is stored internally
         if self.view['axis'] and self._axis is None:
-            from .. import creation
+            from trimesh import creation
             # create an axis marker sized relative to the scene
             axis = creation.axis(origin_size=self.scene.scale / 100)
             # create ordered args for a vertex list
@@ -750,6 +763,12 @@ class SceneViewer(pyglet.window.Window):
             self.maximize()
         elif symbol == pyglet.window.key.F:
             self.toggle_fullscreen()
+        elif symbol == pyglet.window.key.S:
+            self.select_vertex()
+        elif symbol == pyglet.window.key.L:
+            self.drag_vertex()
+        elif symbol == pyglet.window.key.P:
+            self.collide_with_sphere()
 
         if symbol in [
                 pyglet.window.key.LEFT,
@@ -766,7 +785,34 @@ class SceneViewer(pyglet.window.Window):
             elif symbol == pyglet.window.key.UP:
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
+    def collision(self):
+        x = int(self._mouse_x)
+        y = int(self._mouse_y)
+        z0 = (GLfloat *1)()
+        # read the pixels to identify depth of drawn pixel
+        glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, z0)
+        px = (GLdouble)()
+        py = (GLdouble)()
+        pz = (GLdouble)()
+        # convert pixel to world coordinates, if data is not empty, you will see 'normal' values (small sizes)
+        coord = gluUnProject(x, y, z0[0])
 
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry.get('geometry_0')
+        selected = None
+
+        # find the closes vertex to the pixel
+        for i, v in enumerate(geom.vertices):
+            dist = float(np.linalg.norm(v - coord))
+            print(dist, v)
+            if dist < 0.1:
+                print(f"here {i}")
+                selected = i
+
+        # print vertex
+        if selected is not None:
+            print(f"selected vertex: {geom.vertices[selected]}")
+        
     def on_draw(self):
         """
         Run the actual draw calls.
@@ -919,6 +965,73 @@ class SceneViewer(pyglet.window.Window):
             colorbuffer.save(filename=file_obj)
         return file_obj
 
+    def get_mouse_coords(self):
+        deviceWidth, _ = self.get_framebuffer_size()
+        widthRatio = deviceWidth / self.width
+        x = int(self._mouse_x * widthRatio)
+        y = int(self._mouse_y * widthRatio)
+
+        return x, y
+
+
+    def get_z_for_coord(self, x, y):
+        # read the pixels to identify depth of drawn pixel, if no pixel is found we will get a very 'distant' z
+
+        z0 = (GLfloat *1)()
+        glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, z0)
+
+        return z0[0]
+
+
+    def select_vertex(self):
+        x, y = self.get_mouse_coords()
+        z = self.get_z_for_coord(x, y)
+
+        # convert pixel to world coordinates, if data is not empty, you will see 'normal' values (small sizes)
+        coord = gluUnProject(x, y, z)
+
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry.get('geometry_0')
+        for i, v in enumerate(geom.vertices):
+            dist = float(np.linalg.norm(v - coord))
+            print(dist, v)
+            if dist < 0.1:
+                self.selected_vertex = i
+                self.selected_vertex_world = coord
+                self.selected_vertex_z = z
+
+        print(f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
+
+    def drag_vertex(self):
+        if self.selected_vertex is None:
+            print("no selected vertex")
+            return
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry.get('geometry_0')
+        x, y = self.get_mouse_coords()
+        # z = self.get_z_for_coord(x, y)
+        coords = gluUnProject(x, y, self.selected_vertex_z)
+        geom.vertices[self.selected_vertex] = coords
+
+        trimesh.smoothing.filter_taubin(geom)
+
+    def collide_with_sphere(self):
+        x, y = self.get_mouse_coords()
+        z = self.get_z_for_coord(x, y)
+        cx, cy, cz = gluUnProject(x, y, z)
+        sphere = trimesh.primitives.Sphere(center=[cx, cy, cz], radius=0.1)
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry['geometry_0']
+        mask = sphere.contains(geom.vertices)
+        for i, m in enumerate(mask):
+            if m:
+                v = geom.vertices[i]
+                d = v - sphere.center_mass
+                geom.vertices[i] += d
+
+        trimesh.smoothing.filter_taubin(geom)
+
+
 
 def geometry_hash(geometry):
     """
@@ -1003,10 +1116,23 @@ def render_scene(scene,
 
     return render
 
+def init_3d():
+    # mesh=trimesh.primitives.Sphere(radius=0.1, center=[2,2,2])
 
-# mesh=trimesh.primitives.Sphere(radius=0.1, center=[2,2,2])
-box=trimesh.primitives.Box()
-scene = Scene(box)
-viewer = SceneViewer(scene)
-# handgest=Hand_handler(viewer)
-pyglet.app.run() ###add last in the main of coral
+    box=trimesh.creation.box()
+    box.vertices, box.faces = trimesh.remesh.subdivide_to_size(box.vertices, box.faces, 0.1)
+    scene = Scene(box)
+    viewer = SceneViewer(scene)
+    viewer.toggle_axis()
+    # handgest=Hand_handler(viewer)
+    pyglet.app.run() ### blocking!!!!!!!!!
+
+
+if __name__ == '__main__':
+    y=threading.Thread(target=main)
+    x= threading.Thread(target=init_3d)
+    # y.start()
+    x.start()
+    
+
+
