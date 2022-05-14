@@ -1131,7 +1131,7 @@ def init_3d():
 if __name__ == '__main__':
     y=threading.Thread(target=main)
     x= threading.Thread(target=init_3d)
-    # y.start()
+    y.start()
     x.start()
     
 
