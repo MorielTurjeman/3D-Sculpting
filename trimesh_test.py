@@ -7,14 +7,14 @@ Trimesh, Scene, PointCloud, and Path objects.
 
 Works on all major platforms: Windows, Linux, and OSX.
 """
-from asyncio import threads
 import threading
+import multiprocessing
 import collections
 from graphviz import view
 from matplotlib.pyplot import sca
 # from graphviz import view
 import numpy as np
-from app import main
+from app import init_camera_window, main
 
 import pyglet
 from pyglet.window import Window
@@ -741,6 +741,8 @@ class SceneViewer(pyglet.window.Window):
         """
         self.view['ball'].scroll(dy)
         self.scene.camera_transform[...] = self.view['ball'].pose
+        print(dy)
+
 
     def on_key_press(self, symbol, modifiers):
         """
@@ -1117,22 +1119,19 @@ def render_scene(scene,
     return render
 
 def init_3d():
-    # mesh=trimesh.primitives.Sphere(radius=0.1, center=[2,2,2])
-
     box=trimesh.creation.box()
     box.vertices, box.faces = trimesh.remesh.subdivide_to_size(box.vertices, box.faces, 0.1)
     scene = Scene(box)
     viewer = SceneViewer(scene)
-    viewer.toggle_axis()
+    init_camera_window(viewer.on_mouse_press, viewer.on_mouse_drag, viewer.on_mouse_scroll)
     # handgest=Hand_handler(viewer)
     pyglet.app.run() ### blocking!!!!!!!!!
 
 
 if __name__ == '__main__':
-    y=threading.Thread(target=main)
-    x= threading.Thread(target=init_3d)
-    y.start()
-    x.start()
+    init_3d()
+    pyglet.app.run()
+    p1=multiprocessing.Process(target=main, args=(state,))
     
 
 

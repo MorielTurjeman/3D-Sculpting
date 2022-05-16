@@ -1,32 +1,69 @@
 # from ..trimesh_test import *
+from pickletools import pyfloat
 import pyglet
 camera_size = (960, 540)
 screen_size = (1920, 1080)
 
+last_gesture = None
 
-
-def hand_gesture_to_action(hand_gesture,landmark_middel_tip):
+def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_move, mouse_scroll):
     # hand_hendler = Hand_handler()
+    global last_gesture    
     if hand_gesture == 'Scale_IN':
-        print("Scale_IN",landmark_middel_tip)
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+            mouse_scroll(0,0,0,1)
+        else:
+            mouse_scroll(0,0,0,1)
+            print("Scale_IN",landmark_middel_tip)
 
     if hand_gesture == 'Scale_OUT':
-        print("Scale_OUT",landmark_middel_tip)
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+            mouse_scroll(0,0,0,-1)
+        else:
+            print("Scale_OUT",landmark_middel_tip)
+            mouse_scroll(0,0,0,-1)
+            
     if hand_gesture == 'Rotate_LEFT':
-        print('Rotate_LEFT',landmark_middel_tip)
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+            mouse_press(*landmark_middel_tip, pyglet.window.mouse.LEFT, 0)
+        else:
+            mouse_move(*landmark_middel_tip, 0, 0, 0, 0)
+            print('Rotate_LEFT',landmark_middel_tip)
+            
         # hand_hendler.rotate( state = 'Rotate_LEFT', x=landmark_middel_tip[0], y=landmark_middel_tip[1])
     if hand_gesture == 'Rotate_RIGHT':
-        print('Rotate_RIGHT')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Rotate_RIGHT')
     if hand_gesture == 'Rotate_UP':
-        print('Rotate_UP')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Rotate_UP')
     if hand_gesture == 'Rotate_DOWN':
-        print('Rotate_DOWN')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Rotate_DOWN')
     if hand_gesture == 'Rotate_Z_AXIS':
-        print('Rotate_Z_AXIS')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Rotate_Z_AXIS')
     if hand_gesture == 'Stretch':
-        print('Stretch')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Stretch')
     if hand_gesture == 'Shrink':
-        print('Shrink')
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+        else:
+            print('Shrink')
 
 
 # class Hand_handler:
