@@ -486,7 +486,7 @@ def init_camera_window(mouse_press, mouse_move, mouse_scroll):
     def foo(dt):
         return
 
-    pyglet.clock.schedule_interval(foo, 0.01)
+    pyglet.clock.schedule_interval(foo, 0.04)
     
 
 

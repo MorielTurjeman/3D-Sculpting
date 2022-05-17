@@ -716,26 +716,14 @@ class SceneViewer(pyglet.window.Window):
         """
         Set the start point of the drag.
         """
-
-        # scene: Scene = self.scene
-        # mesh: trimesh.Trimesh = scene.geometry.get('geometry_0')
-        # wy = (y - self.height) / self.height
-        # wx = (x - self.width) / self.width
-        # wz, ww = 0, 1
-        # world = np.dot(np.linalg.inv(scene.camera_transform), [wx, wy, wz, ww])
-        # print(world)
-        # oritings = [world[:3]]
-        # dirs = [[0,0, 1]]
-        # print(mesh.ray.intersects_location(oritings, dirs))
-        # # print(mesh.ray.intersects_location(ray_origins=o[idx], ray_directions=p[idx]))
-        # # print(mesh.ray.intersects_location([nx, ny, 0], scene.camera.focal))
-        # # mesh.ray.intersects_location()
         self.view['ball'].set_state(Trackball.STATE_ROTATE)
         if (buttons == pyglet.window.mouse.LEFT):
             ctrl = (modifiers & pyglet.window.key.MOD_CTRL)
             shift = (modifiers & pyglet.window.key.MOD_SHIFT)
-            if (ctrl and shift):
-
+            alt= (modifiers & pyglet.window.key.MOD_ALT)
+            if alt:
+                self.select_vertex()
+            elif (ctrl and shift):
                 self.view['ball'].set_state(Trackball.STATE_ZOOM)
             elif shift:
                 self.view['ball'].set_state(Trackball.STATE_ROLL)
@@ -753,9 +741,11 @@ class SceneViewer(pyglet.window.Window):
         """
         Pan or rotate the view.
         """
-
-        self.view['ball'].drag(np.array([x, y]))
-        self.scene.camera_transform[...] = self.view['ball'].pose
+        if self.selected_vertex:
+            self.drag_vertex()
+        else:
+            self.view['ball'].drag(np.array([x, y]))
+            self.scene.camera_transform[...] = self.view['ball'].pose
 
     def on_mouse_scroll(self, x, y, dx, dy):
         """
@@ -764,6 +754,9 @@ class SceneViewer(pyglet.window.Window):
         self.view['ball'].scroll(dy)
         self.scene.camera_transform[...] = self.view['ball'].pose
         print(dy)
+    
+    def on_mouse_release(self, x, y, button, modifiers):
+        self.selected_vertex= None
 
     def on_key_press(self, symbol, modifiers):
         """
@@ -792,6 +785,8 @@ class SceneViewer(pyglet.window.Window):
             self.drag_vertex()
         elif symbol == pyglet.window.key.P:
             self.collide_with_sphere()
+        elif symbol== pyglet.window.key.I:
+            self.scale()
 
         if symbol in [
                 pyglet.window.key.LEFT,
@@ -808,6 +803,13 @@ class SceneViewer(pyglet.window.Window):
             elif symbol == pyglet.window.key.UP:
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
+
+    def scale(self, x, y, z):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry.get('geometry_0')
+        geom.apply_scale([x,y,z])
+
+
 
     def collision(self):
         x = int(self._mouse_x)
@@ -1016,7 +1018,6 @@ class SceneViewer(pyglet.window.Window):
         geom: Trimesh = scene.geometry.get('geometry_0')
         for i, v in enumerate(geom.vertices):
             dist = float(np.linalg.norm(v - coord))
-            print(dist, v)
             if dist < 0.1:
                 self.selected_vertex = i
                 self.selected_vertex_world = coord
