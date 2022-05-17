@@ -804,10 +804,10 @@ class SceneViewer(pyglet.window.Window):
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
 
-    def scale(self, x, y, z):
-        scene: Scene = self.scene
-        geom: Trimesh = scene.geometry.get('geometry_0')
-        geom.apply_scale([x,y,z])
+    # def scale(self):
+    #     scene: Scene = self.scene
+    #     geom: Trimesh = scene.geometry.get('geometry_0')
+    #     geom.apply_scale([ 0.2, 0.3, 0])
 
 
 

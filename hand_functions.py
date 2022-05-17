@@ -9,7 +9,7 @@ last_gesture = None
 def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_move, mouse_scroll):
     # hand_hendler = Hand_handler()
     global last_gesture    
-    if hand_gesture == 'Scale_IN':
+    if hand_gesture == 'Scale_IN': # change to zoom in
         if last_gesture != hand_gesture:
             last_gesture = hand_gesture
             mouse_scroll(0,0,0,1)
@@ -17,7 +17,7 @@ def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_
             mouse_scroll(0,0,0,1)
             print("Scale_IN",landmark_middel_tip)
 
-    if hand_gesture == 'Scale_OUT':
+    if hand_gesture == 'Scale_OUT': #change to zoom out
         if last_gesture != hand_gesture:
             last_gesture = hand_gesture
             mouse_scroll(0,0,0,-1)
@@ -64,6 +64,7 @@ def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_
             last_gesture = hand_gesture
         else:
             print('Shrink')
+
 
 
 # class Hand_handler:
