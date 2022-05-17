@@ -7,6 +7,7 @@ Trimesh, Scene, PointCloud, and Path objects.
 
 Works on all major platforms: Windows, Linux, and OSX.
 """
+import sys
 import threading
 import multiprocessing
 import collections
@@ -43,7 +44,6 @@ pyglet.options['shadow_window'] = True
 
 import pyglet.gl as gl  # NOQA
 
-import sys
 
 # smooth only when fewer faces than this
 _SMOOTH_MAX_FACES = 100000
@@ -56,13 +56,11 @@ class UI:
         self.impl = PygletRenderer(window)
         imgui.new_frame()
         imgui.end_frame()
-        
 
         # Window variables
-        
+
         self.window: SceneViewer = window
         self.test_input = 0
-       
 
     def render(self):
         imgui.render()
@@ -73,19 +71,20 @@ class UI:
         imgui.begin("Test Window", flags=imgui.WINDOW_MENU_BAR)
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
-                clicked, selected = imgui.menu_item('Capsule', None, False, True)
+                clicked, selected = imgui.menu_item(
+                    'Capsule', None, False, True)
                 if clicked:
                     scene.geometry.popitem()
                     capsule = trimesh.primitives.Capsule()
                     scene.add_geometry(capsule)
-                    self.window.reset_view()                
+                    self.window.reset_view()
                 clicked, selected = imgui.menu_item("Cube")
                 if clicked:
                     scene.geometry.popitem()
                     box = trimesh.primitives.Box()
                     scene.add_geometry(box)
                     self.window.reset_view()
-                clicked, selected= imgui.menu_item("Sphere")
+                clicked, selected = imgui.menu_item("Sphere")
                 if clicked:
                     scene.geometry.popitem()
                     sphere = trimesh.primitives.Sphere()
@@ -96,40 +95,18 @@ class UI:
             if imgui.begin_menu("Actions", True):
                 clicked, selected = imgui.menu_item("Strech in")
                 if clicked:
-                    ## //call strech in function
+                    # //call strech in function
                     pass
                 clicked, selected = imgui.menu_item("Strech out")
                 if clicked:
-                    ## //call strech out function
+                    # //call strech out function
                     pass
                 imgui.end_menu()
-            
+
             imgui.end_main_menu_bar()
 
-
-               
-
-
-
         imgui.end()
-
-        # imgui.begin("ffff")
-        # imgui.end()
-
-        # if imgui.begin_main_menu_bar():
-        #     if imgui.begin_menu("Actions"):
-        #         clicked_strech_in, selected = imgui.menu_item("Strech in", "ctrl+a")
-        #         clicked_strech_out, selected = imgui.menu_item("Strech in", "ctrl+b")
-        #         if clicked_strech_out:
-        #             sys.exit(0)
-        #         imgui.end_menu()
-        #     imgui.end_menu_bar()
-
-
-
         imgui.end_frame()
-        
-    
 
 
 class SceneViewer(pyglet.window.Window):
@@ -755,7 +732,6 @@ class SceneViewer(pyglet.window.Window):
         self.view['ball'].down(np.array([x, y]))
         self.scene.camera_transform[...] = self.view['ball'].pose
 
-
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         """
         Pan or rotate the view.
@@ -771,7 +747,6 @@ class SceneViewer(pyglet.window.Window):
         self.view['ball'].scroll(dy)
         self.scene.camera_transform[...] = self.view['ball'].pose
         print(dy)
-
 
     def on_key_press(self, symbol, modifiers):
         """
@@ -816,10 +791,11 @@ class SceneViewer(pyglet.window.Window):
             elif symbol == pyglet.window.key.UP:
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
+
     def collision(self):
         x = int(self._mouse_x)
         y = int(self._mouse_y)
-        z0 = (GLfloat *1)()
+        z0 = (GLfloat * 1)()
         # read the pixels to identify depth of drawn pixel
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, z0)
         px = (GLdouble)()
@@ -843,7 +819,7 @@ class SceneViewer(pyglet.window.Window):
         # print vertex
         if selected is not None:
             print(f"selected vertex: {geom.vertices[selected]}")
-        
+
     def on_draw(self):
         """
         Run the actual draw calls.
@@ -1004,15 +980,13 @@ class SceneViewer(pyglet.window.Window):
 
         return x, y
 
-
     def get_z_for_coord(self, x, y):
         # read the pixels to identify depth of drawn pixel, if no pixel is found we will get a very 'distant' z
 
-        z0 = (GLfloat *1)()
+        z0 = (GLfloat * 1)()
         glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, z0)
 
         return z0[0]
-
 
     def select_vertex(self):
         x, y = self.get_mouse_coords()
@@ -1031,7 +1005,8 @@ class SceneViewer(pyglet.window.Window):
                 self.selected_vertex_world = coord
                 self.selected_vertex_z = z
 
-        print(f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
+        print(
+            f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
 
     def drag_vertex(self):
         if self.selected_vertex is None:
@@ -1061,7 +1036,6 @@ class SceneViewer(pyglet.window.Window):
                 geom.vertices[i] += d
 
         trimesh.smoothing.filter_taubin(geom)
-
 
 
 def geometry_hash(geometry):
@@ -1147,20 +1121,20 @@ def render_scene(scene,
 
     return render
 
+
 def init_3d():
-    box=trimesh.creation.box()
-    box.vertices, box.faces = trimesh.remesh.subdivide_to_size(box.vertices, box.faces, 0.1)
+    box = trimesh.creation.box()
+    box.vertices, box.faces = trimesh.remesh.subdivide_to_size(
+        box.vertices, box.faces, 0.1)
     scene = Scene(box)
     viewer = SceneViewer(scene)
-    init_camera_window(viewer.on_mouse_press, viewer.on_mouse_drag, viewer.on_mouse_scroll)
+    init_camera_window(viewer.on_mouse_press,
+                       viewer.on_mouse_drag, viewer.on_mouse_scroll)
     # handgest=Hand_handler(viewer)
-    pyglet.app.run() ### blocking!!!!!!!!!
+    pyglet.app.run()  # blocking!!!!!!!!!
 
 
 if __name__ == '__main__':
     init_3d()
     pyglet.app.run()
-    p1=multiprocessing.Process(target=main, args=(state,))
-    
-
-
+    p1 = multiprocessing.Process(target=main, args=(state,))
