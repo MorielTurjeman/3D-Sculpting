@@ -43,6 +43,8 @@ pyglet.options['shadow_window'] = True
 
 import pyglet.gl as gl  # NOQA
 
+import sys
+
 # smooth only when fewer faces than this
 _SMOOTH_MAX_FACES = 100000
 
@@ -90,6 +92,18 @@ class UI:
                     scene.add_geometry(sphere)
                     self.window.reset_view()
                 imgui.end_menu()
+
+            if imgui.begin_menu("Actions", True):
+                clicked, selected = imgui.menu_item("Strech in")
+                if clicked:
+                    ## //call strech in function
+                    pass
+                clicked, selected = imgui.menu_item("Strech out")
+                if clicked:
+                    ## //call strech out function
+                    pass
+                imgui.end_menu()
+            
             imgui.end_main_menu_bar()
 
 
@@ -98,6 +112,21 @@ class UI:
 
 
         imgui.end()
+
+        # imgui.begin("ffff")
+        # imgui.end()
+
+        # if imgui.begin_main_menu_bar():
+        #     if imgui.begin_menu("Actions"):
+        #         clicked_strech_in, selected = imgui.menu_item("Strech in", "ctrl+a")
+        #         clicked_strech_out, selected = imgui.menu_item("Strech in", "ctrl+b")
+        #         if clicked_strech_out:
+        #             sys.exit(0)
+        #         imgui.end_menu()
+        #     imgui.end_menu_bar()
+
+
+
         imgui.end_frame()
         
     
