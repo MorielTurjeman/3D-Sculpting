@@ -1,7 +1,7 @@
 from math import remainder
 import sys
 
-from graphviz import render
+# from graphviz import render
 import numpy as np
 from OpenGL import GLUT, GL
 from cube import Cube, Model
