@@ -66,6 +66,9 @@ class UI:
         imgui.render()
         io = imgui.get_io()
         self.impl.render(imgui.get_draw_data())
+
+        checkbox_smoothing = True
+
         imgui.new_frame()
         scene: Scene = self.window.scene
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
@@ -73,6 +76,13 @@ class UI:
         imgui.button("Brush 1")
         imgui.button("Brush 2")
         imgui.button("Brush 3")
+
+        checkbox_smoothing = imgui.checkbox("Smoothing", checkbox_smoothing)
+        
+
+        imgui.text("Checkbox 1 state value: {}".format(checkbox_smoothing))
+        
+        # smoothing_checkbox = imgui.checkbox("Smoothing", smoothing_checkbox)
         # imgui.end()
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
