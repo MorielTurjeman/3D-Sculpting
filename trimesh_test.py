@@ -68,7 +68,7 @@ class UI:
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
         scene: Scene = self.window.scene
-        imgui.begin("Test Window", flags=imgui.WINDOW_MENU_BAR)
+        imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
@@ -118,6 +118,9 @@ class UI:
                 clicked, selected = imgui.menu_item("Start over")
                 if clicked:
                     self.window.reset_view()
+                clicked, selected = imgui.menu_item("Quit")
+                if clicked:
+                    sys.exit(0)
                 imgui.end_menu()
 
             imgui.end_main_menu_bar()
