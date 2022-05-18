@@ -68,6 +68,7 @@ class UI:
         self.impl.render(imgui.get_draw_data())
 
         checkbox_smoothing = True
+        
 
         imgui.new_frame()
         scene: Scene = self.window.scene
@@ -77,13 +78,44 @@ class UI:
         imgui.button("Brush 2")
         imgui.button("Brush 3")
 
-        checkbox_smoothing = imgui.checkbox("Smoothing", checkbox_smoothing)
-        
+        checkbox_smoothing = imgui.checkbox("Smoothing", checkbox_smoothing) # create smoothign checkbox
+        # imgui.text("Checkbox 1 state value: {}".format(checkbox_smoothing)) # display current state of checkbox
+        # imgui.button("Scale in")
+        # imgui.button("Scale out")
+        imgui.button("Zoom in")
+        imgui.button("Zoom out")
+        imgui.button("Strech in")
+        imgui.button("Strech out")
 
-        imgui.text("Checkbox 1 state value: {}".format(checkbox_smoothing))
+        x_rotation_value = 88
+        y_rotation_value = 88
+        z_rotation_value = 88
+
+        changed, values = imgui.slider_float(
+        "X rotation", x_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
+    
+        # imgui.text("Changed: %s, Values: %s" % (changed, value))
+
+        changed, values = imgui.slider_float(
+        "Y rotation", y_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
+        if changed:
+            y_rotation_value = values
+
+        changed, values = imgui.slider_float(
+        "Z rotation", z_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
         
-        # smoothing_checkbox = imgui.checkbox("Smoothing", smoothing_checkbox)
-        # imgui.end()
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
@@ -141,6 +173,18 @@ class UI:
             imgui.end_main_menu_bar()
 
         imgui.end()
+
+        scale_x_val = 0.0
+        scale_y_val = 0.0
+        scale_z_val = 0.0
+        imgui.begin("Scale")
+        # changed, values = imgui.input_float4('Type here:', *values)
+        # imgui.text("Changed: %s, Values: %s" % (changed, values))
+        changed, float_val = imgui.input_float('X', scale_x_val)
+        changed, float_val = imgui.input_float('Y', scale_y_val)
+        changed, float_val = imgui.input_float('Z', scale_z_val)
+        imgui.end()
+
         imgui.end_frame()
 
 
