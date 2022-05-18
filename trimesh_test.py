@@ -69,6 +69,11 @@ class UI:
         imgui.new_frame()
         scene: Scene = self.window.scene
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
+        imgui.text("Brushes!!!")
+        imgui.button("Brush 1")
+        imgui.button("Brush 2")
+        imgui.button("Brush 3")
+        # imgui.end()
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
