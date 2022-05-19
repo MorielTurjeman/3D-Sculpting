@@ -79,9 +79,7 @@ class UI:
         imgui.button("Brush 3")
 
         checkbox_smoothing = imgui.checkbox("Smoothing", checkbox_smoothing) # create smoothign checkbox
-        # imgui.text("Checkbox 1 state value: {}".format(checkbox_smoothing)) # display current state of checkbox
-        # imgui.button("Scale in")
-        # imgui.button("Scale out")
+        
         imgui.button("Zoom in")
         imgui.button("Zoom out")
         imgui.button("Strech in")
