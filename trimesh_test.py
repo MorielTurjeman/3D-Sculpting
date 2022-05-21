@@ -15,6 +15,8 @@ from graphviz import view
 from matplotlib.pyplot import sca
 # from graphviz import view
 import numpy as np
+import scipy
+import scipy.spatial
 from app import init_camera_window, main
 
 import pyglet
@@ -41,6 +43,7 @@ from trimesh.transformations import translation_matrix
 #from hand_gesture_recognition.hand_functions import *
 
 pyglet.options['shadow_window'] = True
+pyglet.options['debug_gl'] = False
 
 import pyglet.gl as gl  # NOQA
 
@@ -776,6 +779,7 @@ class SceneViewer(pyglet.window.Window):
         """
         Set the start point of the drag.
         """
+        self.switch_to()
         self.view['ball'].set_state(Trackball.STATE_ROTATE)
         if (buttons == pyglet.window.mouse.LEFT):
             ctrl = (modifiers & pyglet.window.key.MOD_CTRL)
@@ -801,6 +805,7 @@ class SceneViewer(pyglet.window.Window):
         """
         Pan or rotate the view.
         """
+        self.switch_to()
         if self.selected_vertex:
             self.drag_vertex()
         else:
@@ -1076,15 +1081,36 @@ class SceneViewer(pyglet.window.Window):
 
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry.get('geometry_0')
-        for i, v in enumerate(geom.vertices):
-            dist = float(np.linalg.norm(v - coord))
-            if dist < 0.1:
-                self.selected_vertex = i
-                self.selected_vertex_world = coord
-                self.selected_vertex_z = z
+        # find distance and index of closest vertex to mouse coordinates
+        dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
+
+        if dist < 0.1:
+            self.selected_vertex = index
+            self.selected_vertex_z = z
 
         print(
             f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
+
+    def extend_vertex_selection(self, vertex_list, iterations=5):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry['geometry_0']
+        faces = geom.faces
+        selected_vertices = [*vertex_list]
+        for i in range(iterations):
+            mask = np.maximum.reduce(np.isin(faces, selected_vertices), axis=1)
+            selected_vertices = np.unique(faces[mask].flatten())
+
+        return selected_vertices
+
+    def smooth(self, vertices):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry['geometry_0']
+        all_vertices = np.arange(len(geom.vertices))
+        pinned = np.delete(all_vertices, vertices)
+
+        operator = trimesh.smoothing.laplacian_calculation(geom, pinned_vertices=pinned)
+        trimesh.smoothing.filter_taubin(geom, laplacian_operator=operator)
+
 
     def drag_vertex(self):
         if self.selected_vertex is None:
@@ -1097,7 +1123,8 @@ class SceneViewer(pyglet.window.Window):
         coords = gluUnProject(x, y, self.selected_vertex_z)
         geom.vertices[self.selected_vertex] = coords
 
-        trimesh.smoothing.filter_taubin(geom)
+        # trimesh.smoothing.filter_taubin(geom)
+        self.smooth(self.extend_vertex_selection([self.selected_vertex]))
 
     def collide_with_sphere(self):
         x, y = self.get_mouse_coords()
