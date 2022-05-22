@@ -187,17 +187,6 @@ class UI:
 
         imgui.end()
 
-        # scale_x_val = 0.0
-        # scale_y_val = 0.0
-        # scale_z_val = 0.0
-        # imgui.begin("Scale")
-        # changed, values = imgui.input_float4('Type here:', *values)
-        # imgui.text("Changed: %s, Values: %s" % (changed, values))
-        # changed, float_val = imgui.input_float('X', self.scale_x_val)
-        # changed, float_val = imgui.input_float('Y', self.scale_y_val)
-        # changed, float_val = imgui.input_float('Z', self.scale_z_val)
-        # imgui.end()
-
         imgui.end_frame()
 
 
