@@ -114,6 +114,7 @@ class UI:
         power=0.5
         )
         
+        
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
