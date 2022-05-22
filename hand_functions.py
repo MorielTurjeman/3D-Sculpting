@@ -64,6 +64,8 @@ def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_
             last_gesture = hand_gesture
         else:
             print('Shrink')
+    else:
+        print(hand_gesture)
 
 
 
