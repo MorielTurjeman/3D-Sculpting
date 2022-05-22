@@ -381,7 +381,7 @@ class SceneViewer(pyglet.window.Window):
 
     
     def set_mouse_brush_sphere(self):
-        image= pyglet.image.load('redMouseCursor.png')
+        image= pyglet.image.load('5_iterations_brush.png')
         cursor= pyglet.window.ImageMouseCursor(image, 8,8)
         self.set_mouse_cursor(cursor)
     
@@ -1111,7 +1111,7 @@ class SceneViewer(pyglet.window.Window):
         print(
             f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
 
-    def extend_vertex_selection(self, vertex_list, iterations=3):
+    def extend_vertex_selection(self, vertex_list, iterations=5):
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry['geometry_0']
         faces = geom.faces
