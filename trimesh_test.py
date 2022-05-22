@@ -66,9 +66,13 @@ class UI:
         self.window: SceneViewer = window
         self.test_input = 0
         self.checkbox_smoothing = False
-        # self.x_rotation_value = 88
-        # self.y_rotation_value = 88
-        # self.z_rotation_value = 88
+        self.x_rotation_value = 50
+        self.y_rotation_value = 50
+        self.z_rotation_value = 50
+        self.scale_x_val = 0.0
+        self.scale_y_val = 0.0
+        self.scale_z_val = 0.0
+
         
 
     def render(self):
@@ -94,6 +98,9 @@ class UI:
         # imgui.button("Zoom out")
         imgui.button("Strech in")
         imgui.button("Strech out")
+        changed, float_val = imgui.input_float('X scale', self.scale_x_val)
+        changed, float_val = imgui.input_float('Y scale', self.scale_y_val)
+        changed, float_val = imgui.input_float('Z scale', self.scale_z_val)
 
         
 
@@ -180,16 +187,16 @@ class UI:
 
         imgui.end()
 
-        scale_x_val = 0.0
-        scale_y_val = 0.0
-        scale_z_val = 0.0
-        imgui.begin("Scale")
+        # scale_x_val = 0.0
+        # scale_y_val = 0.0
+        # scale_z_val = 0.0
+        # imgui.begin("Scale")
         # changed, values = imgui.input_float4('Type here:', *values)
         # imgui.text("Changed: %s, Values: %s" % (changed, values))
-        changed, float_val = imgui.input_float('X', scale_x_val)
-        changed, float_val = imgui.input_float('Y', scale_y_val)
-        changed, float_val = imgui.input_float('Z', scale_z_val)
-        imgui.end()
+        # changed, float_val = imgui.input_float('X', self.scale_x_val)
+        # changed, float_val = imgui.input_float('Y', self.scale_y_val)
+        # changed, float_val = imgui.input_float('Z', self.scale_z_val)
+        # imgui.end()
 
         imgui.end_frame()
 
