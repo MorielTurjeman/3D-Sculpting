@@ -7,18 +7,20 @@ Trimesh, Scene, PointCloud, and Path objects.
 
 Works on all major platforms: Windows, Linux, and OSX.
 """
+from curses import window
+from sre_constants import CHCODES
 import sys
 import threading
 import multiprocessing
 import collections
-from graphviz import view
-from matplotlib.pyplot import sca
 # from graphviz import view
 import numpy as np
+import scipy
+import scipy.spatial
 from app import init_camera_window, main
 
 import pyglet
-from pyglet.window import Window
+import pyglet.window.mouse
 from imgui.integrations.pyglet import PygletRenderer
 
 
@@ -41,6 +43,8 @@ from trimesh.transformations import translation_matrix
 #from hand_gesture_recognition.hand_functions import *
 
 pyglet.options['shadow_window'] = True
+pyglet.options['debug_gl'] = False
+pyglet.options['xsync'] = False
 
 import pyglet.gl as gl  # NOQA
 
@@ -61,58 +65,61 @@ class UI:
 
         self.window: SceneViewer = window
         self.test_input = 0
+        self.checkbox_smoothing = False
+        # self.x_rotation_value = 88
+        # self.y_rotation_value = 88
+        # self.z_rotation_value = 88
+        
 
     def render(self):
         imgui.render()
         io = imgui.get_io()
         self.impl.render(imgui.get_draw_data())
-
-        checkbox_smoothing = True
         
+
 
         imgui.new_frame()
         scene: Scene = self.window.scene
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
         imgui.text("Brushes!!!")
-        imgui.button("Brush 1")
+        if (imgui.button("Brush 1")):
+            self.window.set_mouse_brush_sphere()
         imgui.button("Brush 2")
         imgui.button("Brush 3")
-
-        checkbox_smoothing = imgui.checkbox("Smoothing", checkbox_smoothing) # create smoothign checkbox
+        # if checkbox_smoothing:
+        _, self.checkbox_smoothing = imgui.checkbox("Smoothing", self.checkbox_smoothing) # create smoothign 
         
-        imgui.button("Zoom in")
-        imgui.button("Zoom out")
+        
+        # imgui.button("Zoom in")
+        # imgui.button("Zoom out")
         imgui.button("Strech in")
         imgui.button("Strech out")
 
-        x_rotation_value = 88
-        y_rotation_value = 88
-        z_rotation_value = 88
+        
 
-        changed, values = imgui.slider_float(
-        "X rotation", x_rotation_value,
-        min_value=0.0, max_value=100.0,
-        format="%.0f",
-        power=0.5
-        )
+        # changed, self.x_rotation_value = imgui.slider_float(
+        # "X rotation", self.x_rotation_value,
+        # min_value=0.0, max_value=100.0,
+        # format="%.0f",
+        # power=0.5
+        # )
     
-        # imgui.text("Changed: %s, Values: %s" % (changed, value))
+        # # imgui.text("Changed: %s, Values: %s" % (changed, value))
 
-        changed, values = imgui.slider_float(
-        "Y rotation", y_rotation_value,
-        min_value=0.0, max_value=100.0,
-        format="%.0f",
-        power=0.5
-        )
-        if changed:
-            y_rotation_value = values
+        # changed, self.y_rotation_value = imgui.slider_float(
+        # "Y rotation", self.y_rotation_value,
+        # min_value=0.0, max_value=100.0,
+        # format="%.0f",
+        # power=0.5
+        # )
+    
 
-        changed, values = imgui.slider_float(
-        "Z rotation", z_rotation_value,
-        min_value=0.0, max_value=100.0,
-        format="%.0f",
-        power=0.5
-        )
+        # changed, self.z_rotation_value = imgui.slider_float(
+        # "Z rotation", self.z_rotation_value,
+        # min_value=0.0, max_value=100.0,
+        # format="%.0f",
+        # power=0.5
+        # )
         
         
         if imgui.begin_main_menu_bar():
@@ -356,6 +363,8 @@ class SceneViewer(pyglet.window.Window):
             self.reset_view(flags=flags)
         self.update_flags()
 
+        # self.set_mouse_cursor(
+
         # someone has passed a callback to be called periodically
         if self.callback is not None:
             # if no callback period is specified set it to default
@@ -369,6 +378,16 @@ class SceneViewer(pyglet.window.Window):
                                            callback_period)
 
         self.ui = UI(self)
+
+    
+    def set_mouse_brush_sphere(self):
+        image= pyglet.image.load('redMouseCursor.png')
+        cursor= pyglet.window.ImageMouseCursor(image, 8,8)
+        self.set_mouse_cursor(cursor)
+    
+    def set_defult_mouse_cursor(self):
+        default_cursor=pyglet.window.DefaultMouseCursor()
+        self.set_mouse_cursor(default_cursor)
 
     def _redraw(self):
         self.on_draw()
@@ -777,11 +796,13 @@ class SceneViewer(pyglet.window.Window):
         """
         Set the start point of the drag.
         """
+        self.switch_to()
         self.view['ball'].set_state(Trackball.STATE_ROTATE)
         if (buttons == pyglet.window.mouse.LEFT):
             ctrl = (modifiers & pyglet.window.key.MOD_CTRL)
             shift = (modifiers & pyglet.window.key.MOD_SHIFT)
             alt= (modifiers & pyglet.window.key.MOD_ALT)
+      
             if alt:
                 self.select_vertex()
             elif (ctrl and shift):
@@ -802,6 +823,7 @@ class SceneViewer(pyglet.window.Window):
         """
         Pan or rotate the view.
         """
+        self.switch_to()
         if self.selected_vertex:
             self.drag_vertex()
         else:
@@ -848,6 +870,8 @@ class SceneViewer(pyglet.window.Window):
             self.collide_with_sphere()
         elif symbol== pyglet.window.key.I:
             self.scale()
+        elif symbol== pyglet.window.key.ESCAPE:
+            self.set_defult_mouse_cursor()
 
         if symbol in [
                 pyglet.window.key.LEFT,
@@ -1077,15 +1101,36 @@ class SceneViewer(pyglet.window.Window):
 
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry.get('geometry_0')
-        for i, v in enumerate(geom.vertices):
-            dist = float(np.linalg.norm(v - coord))
-            if dist < 0.1:
-                self.selected_vertex = i
-                self.selected_vertex_world = coord
-                self.selected_vertex_z = z
+        # find distance and index of closest vertex to mouse coordinates
+        dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
+
+        if dist < 0.1:
+            self.selected_vertex = index
+            self.selected_vertex_z = z
 
         print(
             f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
+
+    def extend_vertex_selection(self, vertex_list, iterations=3):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry['geometry_0']
+        faces = geom.faces
+        selected_vertices = [*vertex_list]
+        for i in range(iterations):
+            mask = np.maximum.reduce(np.isin(faces, selected_vertices), axis=1)
+            selected_vertices = np.unique(faces[mask].flatten())
+
+        return selected_vertices
+
+    def smooth(self, vertices):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry['geometry_0']
+        all_vertices = np.arange(len(geom.vertices))
+        pinned = np.delete(all_vertices, vertices)
+
+        operator = trimesh.smoothing.laplacian_calculation(geom, pinned_vertices=pinned)
+        trimesh.smoothing.filter_taubin(geom, laplacian_operator=operator)
+
 
     def drag_vertex(self):
         if self.selected_vertex is None:
@@ -1098,7 +1143,8 @@ class SceneViewer(pyglet.window.Window):
         coords = gluUnProject(x, y, self.selected_vertex_z)
         geom.vertices[self.selected_vertex] = coords
 
-        trimesh.smoothing.filter_taubin(geom)
+        # trimesh.smoothing.filter_taubin(geom)
+        self.smooth(self.extend_vertex_selection([self.selected_vertex]))
 
     def collide_with_sphere(self):
         x, y = self.get_mouse_coords()
