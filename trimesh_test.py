@@ -80,10 +80,16 @@ class UI:
         io = imgui.get_io()
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
+        #set size for all the widget sliders
+        imgui.begin_child("region", 200, -50, border=False)
+
 
         scene: Scene = self.window.scene
+
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
 
+
+       
         imgui.text("Brushes!!!")
         if (imgui.button("Brush 1")):
             self.window.set_mouse_brush_sphere()
@@ -97,7 +103,8 @@ class UI:
         imgui.button("Zoom out")
         imgui.button("Strech in")
         imgui.button("Strech out")
-        
+        #set size for all the widget sliders
+        # imgui.begin_child("region", 200, -50, border=False)
         _, self.scale_x_val = imgui.input_float('X scale', self.scale_x_val, format="%.2f")
         print(self.scale_x_val)
         _, self.scale_y_val = imgui.input_float('Y scale', self.scale_y_val, format="%.2f")
@@ -129,7 +136,10 @@ class UI:
         format="%.0f",
         power=0.5
         )
-        
+        # imgui.end_child()
+
+
+
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
@@ -1275,5 +1285,5 @@ def init_3d():
 
 if __name__ == '__main__':
     init_3d()
-    pyglet.app.run()
+    # pyglet.app.run()
     p1 = multiprocessing.Process(target=main, args=(state,))
