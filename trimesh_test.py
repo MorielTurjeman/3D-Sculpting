@@ -70,9 +70,9 @@ class UI:
         self.x_rotation_value = 50
         self.y_rotation_value = 50
         self.z_rotation_value = 50
-        self.scale_x_val = 0.0
-        self.scale_y_val = 0.0
-        self.scale_z_val = 0.0
+        self.scale_x_val = 1.0
+        self.scale_y_val = 1.0
+        self.scale_z_val = 1.0
 
     def render(self):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -97,9 +97,14 @@ class UI:
         imgui.button("Zoom out")
         imgui.button("Strech in")
         imgui.button("Strech out")
-        changed, float_val = imgui.input_float('X scale', self.scale_x_val)
-        changed, float_val = imgui.input_float('Y scale', self.scale_y_val)
-        changed, float_val = imgui.input_float('Z scale', self.scale_z_val)
+        
+        _, self.scale_x_val = imgui.input_float('X scale', self.scale_x_val, format="%.2f")
+        print(self.scale_x_val)
+        _, self.scale_y_val = imgui.input_float('Y scale', self.scale_y_val, format="%.2f")
+        _, self.scale_z_val = imgui.input_float('Z scale', self.scale_z_val, format="%.2f")
+        self.window.scale(self.scale_x_val, self.scale_y_val, self.scale_z_val)
+       
+        
 
         changed, self.x_rotation_value = imgui.slider_float(
         "X rotation", self.x_rotation_value,
@@ -182,16 +187,15 @@ class UI:
             imgui.end_main_menu_bar()
         imgui.end()
         
-        scale_x_val = 0.0
-        scale_y_val = 0.0
-        scale_z_val = 0.0
-        imgui.begin("Scale")
-        # changed, values = imgui.input_float4('Type here:', *values)
-        # imgui.text("Changed: %s, Values: %s" % (changed, values))
-        changed, float_val = imgui.input_float('X', scale_x_val)
-        changed, float_val = imgui.input_float('Y', scale_y_val)
-        changed, float_val = imgui.input_float('Z', scale_z_val)
-        imgui.end()
+       
+        # imgui.begin("Scale")
+        # # changed, values = imgui.input_float4('Type here:', *values)
+        # # imgui.text("Changed: %s, Values: %s" % (changed, values))
+        # # changed, float_val = imgui.input_float('X', self.scale_x_val)
+        # # changed, float_val = imgui.input_float('Y', self.scale_y_val)
+        # # changed, float_val = imgui.input_float('Z', self.scale_z_val)
+        # # self.window.scale(flo, self.scale_y_val, self.scale_z_val)
+        # imgui.end()
         
         imgui.end_frame()
         
@@ -901,10 +905,10 @@ class SceneViewer(pyglet.window.Window):
                 self.view['ball'].drag([0, magnitude])
             self.scene.camera_transform[...] = self.view['ball'].pose
 
-    # def scale(self):
-    #     scene: Scene = self.scene
-    #     geom: Trimesh = scene.geometry.get('geometry_0')
-    #     geom.apply_scale([ 0.2, 0.3, 0])
+    def scale(self, x, y, z):
+        scene: Scene = self.scene
+        geom: Trimesh = scene.geometry.get('geometry_0')
+        geom.apply_scale([x, y, z])
 
     def collision(self):
         x = int(self._mouse_x)
