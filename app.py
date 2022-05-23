@@ -142,9 +142,17 @@ def main(mouse_press, mouse_move, mouse_scroll):
                     brect,
                     handedness,
                     keypoint_classifier_labels[hand_sign_id]
+                    
                 )
+                
+                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12], mouse_press, mouse_move, mouse_scroll, landmark_list)
+               
 
-                # hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12], mouse_press, mouse_move, mouse_scroll)
+                
+                
+            
+                
+        
 
         debug_image = draw_info(debug_image, fps, mode, number)
 

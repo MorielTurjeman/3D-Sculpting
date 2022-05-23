@@ -1,22 +1,27 @@
 # from ..trimesh_test import *
 from pickletools import pyfloat
 import pyglet
+import operator
 camera_size = (960, 540)
 screen_size = (1920, 1080)
 
 last_gesture = None
+lastdy=0
 
-def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_move, mouse_scroll):
+
+def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_move, mouse_scroll, landmark_list):
     # hand_hendler = Hand_handler()
     global last_gesture    
-    if hand_gesture == 'Scale_IN': # change to zoom in
+    if hand_gesture == 'Zoom': # change to zoom in
         if last_gesture != hand_gesture:
             last_gesture = hand_gesture
             mouse_scroll(0,0,0,1)
+            
         else:
-            mouse_scroll(0,0,0,1)
-            print("Scale_IN",landmark_middel_tip)
-
+           mouse_scroll(0,0,0,-1)
+           print("Scale_IN",landmark_middel_tip)
+            
+            
     if hand_gesture == 'Scale_OUT': #change to zoom out
         if last_gesture != hand_gesture:
             last_gesture = hand_gesture
