@@ -25,8 +25,8 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--device", type=int, default=0)
-    parser.add_argument("--width", help='cap width', type=int, default=960)
-    parser.add_argument("--height", help='cap height', type=int, default=540)
+    parser.add_argument("--width", help='cap width', type=int, default=1024)
+    parser.add_argument("--height", help='cap height', type=int, default=768)
 
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
@@ -61,8 +61,8 @@ def main(mouse_press, mouse_move, mouse_scroll):
     use_brect = True
 
     # Camera preparation #
-    cap = cv.VideoCapture(cap_device)
-
+    cap = cv.VideoCapture(cv.CAP_ANY)
+    
     cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
@@ -99,7 +99,6 @@ def main(mouse_press, mouse_move, mouse_scroll):
 
         # Camera capture #
         ret, image = cap.read()
-
         if not ret:
             break
 
@@ -145,7 +144,7 @@ def main(mouse_press, mouse_move, mouse_scroll):
                     
                 )
                 
-                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12], mouse_press, mouse_move, mouse_scroll, landmark_list)
+                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12], mouse_press, mouse_move, mouse_scroll, landmark_list, image.shape[0])
                
 
                 
