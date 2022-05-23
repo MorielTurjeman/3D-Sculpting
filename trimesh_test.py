@@ -99,7 +99,6 @@ class UI:
         imgui.button("Strech out")
         
         _, self.scale_x_val = imgui.input_float('X scale', self.scale_x_val, format="%.2f")
-        print(self.scale_x_val)
         _, self.scale_y_val = imgui.input_float('Y scale', self.scale_y_val, format="%.2f")
         _, self.scale_z_val = imgui.input_float('Z scale', self.scale_z_val, format="%.2f")
         self.window.scale(self.scale_x_val, self.scale_y_val, self.scale_z_val)
@@ -852,7 +851,6 @@ class SceneViewer(pyglet.window.Window):
         """
         self.view['ball'].scroll(dy)
         self.scene.camera_transform[...] = self.view['ball'].pose
-        print(dy)
 
     def on_mouse_release(self, x, y, button, modifiers):
         self.selected_vertex = None
@@ -929,7 +927,6 @@ class SceneViewer(pyglet.window.Window):
         # find the closes vertex to the pixel
         for i, v in enumerate(geom.vertices):
             dist = float(np.linalg.norm(v - coord))
-            print(dist, v)
             if dist < 0.1:
                 print(f"here {i}")
                 selected = i
