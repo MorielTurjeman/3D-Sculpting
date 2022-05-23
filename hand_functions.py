@@ -1,17 +1,17 @@
 # from ..trimesh_test import *
 from pickletools import pyfloat
 import pyglet
-import operator
 camera_size = (960, 540)
 screen_size = (1920, 1080)
 
 last_gesture = None
 lastdy=0
 
-def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_move, mouse_scroll, landmark_list, ymax):
+def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
     # hand_hendler = Hand_handler()
     global last_gesture
     global lastdy
+    viewer.set_defult_mouse_cursor()
     if hand_gesture == 'Zoom':
         dy = landmark_list[8][1] - landmark_list[4][1]
         if last_gesture != hand_gesture:
@@ -20,16 +20,27 @@ def hand_gesture_to_action(hand_gesture,landmark_middel_tip, mouse_press, mouse_
         else:
             diff = lastdy - dy
             if abs(diff) > 3:
-                mouse_scroll(0,0,0, 1 if diff > 0 else -1)
+                viewer.on_mouse_scroll(0,0,0, 1 if diff > 0 else -1)
                 lastdy = dy
     elif hand_gesture == 'Rotate':
         last_coord = landmark_list[9]
         last_coord[1] = ymax - last_coord[1]
         if last_gesture != hand_gesture:
             last_gesture = hand_gesture
-            mouse_press(last_coord[0], last_coord[1], pyglet.window.key.LEFT, 0)
+            viewer.on_mouse_press(last_coord[0], last_coord[1], pyglet.window.mouse.LEFT, 0)
         else:
-            mouse_move(last_coord[0], last_coord[1], 0, 0, pyglet.window.key.LEFT, 0)
+            viewer.on_mouse_drag(last_coord[0], last_coord[1], 0, 0, pyglet.window.mouse.LEFT, 0)
+    elif hand_gesture == 'Rotate_Z':
+        last_coord = landmark_list[9]
+        last_coord[1] = ymax - last_coord[1]
+        if last_gesture != hand_gesture:
+            last_gesture = hand_gesture
+            viewer.on_mouse_press(last_coord[0], last_coord[1], pyglet.window.mouse.LEFT, pyglet.window.key.MOD_SHIFT)
+        else:
+            viewer.on_mouse_drag(last_coord[0], last_coord[1], 0, 0, pyglet.window.mouse.LEFT, 0)
+    # elif hand_gesture == 'Push':
+    #     viewer.set_mouse_brush_sphere()
+    #     viewer.set_mouse_position(*landmark_list[9])
     else:
         print(hand_gesture)
         

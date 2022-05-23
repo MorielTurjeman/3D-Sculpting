@@ -17,7 +17,7 @@ import collections
 import numpy as np
 import scipy
 import scipy.spatial
-from app import init_camera_window, main
+from app import init_camera_window
 
 import pyglet
 import pyglet.window.mouse
@@ -86,9 +86,12 @@ class UI:
 
         imgui.text("Brushes!!!")
         if (imgui.button("Brush 1")):
-            self.window.set_mouse_brush_sphere()
-        imgui.button("Brush 2")
-        imgui.button("Brush 3")
+            self.window.set_mouse_brush_sphere(1)
+        if imgui.button("Brush 2"):
+            self.window.set_mouse_brush_sphere(3)
+        if imgui.button("Brush 3"):
+            self.window.set_mouse_brush_sphere(5)
+
         # if checkbox_smoothing:
         _, self.checkbox_smoothing = imgui.checkbox(
             "Smoothing", self.checkbox_smoothing)  # create smoothign
@@ -279,6 +282,12 @@ class SceneViewer(pyglet.window.Window):
         self.selected_vertex = None
         self.selected_vertex_world = None
         self.selected_vertex_z = None
+        
+        # select mode is either vertex / sphere
+        self.select_mode = 'vertex'
+        self.selected_vertices = None
+
+
 
         # a transform to offset lines slightly to avoid Z-fighting
         self._line_offset = translation_matrix(
@@ -388,14 +397,22 @@ class SceneViewer(pyglet.window.Window):
 
         self.ui = UI(self)
 
-    def set_mouse_brush_sphere(self):
-        image = pyglet.image.load('5_iterations_brush.png')
+    def set_mouse_brush_sphere(self, iter):
+        if iter==5:
+            image = pyglet.image.load('5_iterations_brush.png')
+        if iter==3:
+            image = pyglet.image.load('3_iterations_brush.png')
+        if iter==1:
+            image = pyglet.image.load('1_iterations_brush.png')
+
         cursor = pyglet.window.ImageMouseCursor(image, 8, 8)
         self.set_mouse_cursor(cursor)
+        self.select_mode = 'sphere'
 
     def set_defult_mouse_cursor(self):
         default_cursor = pyglet.window.DefaultMouseCursor()
         self.set_mouse_cursor(default_cursor)
+        self.select_mode = 'vertex'
 
     def _redraw(self):
         self.on_draw()
@@ -817,9 +834,13 @@ class SceneViewer(pyglet.window.Window):
             ctrl = (modifiers & pyglet.window.key.MOD_CTRL)
             shift = (modifiers & pyglet.window.key.MOD_SHIFT)
             alt = (modifiers & pyglet.window.key.MOD_ALT)
-
             if alt:
-                self.select_vertex()
+                scene: Scene = self.scene
+                self.geom_copy = scene.geometry['geometry_0'].copy()
+                if self.select_mode == 'vertex':
+                    self.select_vertex()
+                else:
+                    self.collide_with_sphere()
             elif (ctrl and shift):
                 self.view['ball'].set_state(Trackball.STATE_ZOOM)
             elif shift:
@@ -832,6 +853,7 @@ class SceneViewer(pyglet.window.Window):
             self.view['ball'].set_state(Trackball.STATE_ZOOM)
 
         self.view['ball'].down(np.array([x, y]))
+        
         self.scene.camera_transform[...] = self.view['ball'].pose
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
@@ -839,7 +861,7 @@ class SceneViewer(pyglet.window.Window):
         Pan or rotate the view.
         """
         self.switch_to()
-        if self.selected_vertex:
+        if self.selected_vertices:
             self.drag_vertex()
         else:
             self.view['ball'].drag(np.array([x, y]))
@@ -853,7 +875,7 @@ class SceneViewer(pyglet.window.Window):
         self.scene.camera_transform[...] = self.view['ball'].pose
 
     def on_mouse_release(self, x, y, button, modifiers):
-        self.selected_vertex = None
+        self.selected_vertices = None
 
     def on_key_press(self, symbol, modifiers):
         """
@@ -1116,11 +1138,12 @@ class SceneViewer(pyglet.window.Window):
         dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
 
         if dist < 0.1:
-            self.selected_vertex = index
+            self.selected_vertices = [index]
             self.selected_vertex_z = z
+            self.selected_vertex_world = coord
 
         print(
-            f"Selecting vertex: {self.selected_vertex}, coords: {self.selected_vertex_world}")
+            f"Selecting vertex: {self.selected_vertices}")
 
     def extend_vertex_selection(self, vertex_list, iterations=5):
         scene: Scene = self.scene
@@ -1144,18 +1167,21 @@ class SceneViewer(pyglet.window.Window):
         trimesh.smoothing.filter_taubin(geom, laplacian_operator=operator)
 
     def drag_vertex(self):
-        if self.selected_vertex is None:
+        if self.selected_vertices is None:
             print("no selected vertex")
             return
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry.get('geometry_0')
+        # geom.vertices = self.geom_copy.vertices.copy()
         x, y = self.get_mouse_coords()
         # z = self.get_z_for_coord(x, y)
         coords = gluUnProject(x, y, self.selected_vertex_z)
-        geom.vertices[self.selected_vertex] = coords
+        dir = np.array(coords) - np.array(self.selected_vertex_world)
+        for v in self.selected_vertices:
+            geom.vertices[v] = coords
 
         # trimesh.smoothing.filter_taubin(geom)
-        self.smooth(self.extend_vertex_selection([self.selected_vertex]))
+        self.smooth(self.extend_vertex_selection(self.selected_vertices))
 
     def collide_with_sphere(self):
         x, y = self.get_mouse_coords()
@@ -1165,13 +1191,19 @@ class SceneViewer(pyglet.window.Window):
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry['geometry_0']
         mask = sphere.contains(geom.vertices)
+        vertices = []
         for i, m in enumerate(mask):
             if m:
                 v = geom.vertices[i]
                 d = v - sphere.center_mass
-                geom.vertices[i] += d
+                geom.vertices[i] += d*2
+                vertices.append(i)
 
-        trimesh.smoothing.filter_taubin(geom)
+        # self.selected_vertices = vertices
+        # self.selected_vertex_world = [cx, cy, cz]
+        # self.selected_vertex_z = cz
+        # print(self.selected_vertices)
+        self.smooth(self.extend_vertex_selection(vertices))
 
 
 def geometry_hash(geometry):
@@ -1264,8 +1296,7 @@ def init_3d():
         box.vertices, box.faces, 0.1)
     scene = Scene(box)
     viewer = SceneViewer(scene)
-    init_camera_window(viewer.on_mouse_press,
-                       viewer.on_mouse_drag, viewer.on_mouse_scroll)
+    init_camera_window(viewer)
     # handgest=Hand_handler(viewer)
     pyglet.app.run()  # blocking!!!!!!!!!
 
@@ -1273,4 +1304,3 @@ def init_3d():
 if __name__ == '__main__':
     init_3d()
     pyglet.app.run()
-    p1 = multiprocessing.Process(target=main, args=(state,))
