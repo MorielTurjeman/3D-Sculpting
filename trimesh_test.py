@@ -59,6 +59,7 @@ class UI:
         self.renderer = PygletRenderer(window)
         self.impl = PygletRenderer(window)
         imgui.new_frame()
+
         imgui.end_frame()
 
         # Window variables
@@ -74,13 +75,15 @@ class UI:
         self.scale_z_val = 0.0
 
     def render(self):
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         imgui.render()
         io = imgui.get_io()
         self.impl.render(imgui.get_draw_data())
-
         imgui.new_frame()
+
         scene: Scene = self.window.scene
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
+
         imgui.text("Brushes!!!")
         if (imgui.button("Brush 1")):
             self.window.set_mouse_brush_sphere()
@@ -90,37 +93,38 @@ class UI:
         _, self.checkbox_smoothing = imgui.checkbox(
             "Smoothing", self.checkbox_smoothing)  # create smoothign
 
-        # imgui.button("Zoom in")
-        # imgui.button("Zoom out")
+        imgui.button("Zoom in")
+        imgui.button("Zoom out")
         imgui.button("Strech in")
         imgui.button("Strech out")
         changed, float_val = imgui.input_float('X scale', self.scale_x_val)
         changed, float_val = imgui.input_float('Y scale', self.scale_y_val)
         changed, float_val = imgui.input_float('Z scale', self.scale_z_val)
 
-        # changed, self.x_rotation_value = imgui.slider_float(
-        # "X rotation", self.x_rotation_value,
-        # min_value=0.0, max_value=100.0,
-        # format="%.0f",
-        # power=0.5
-        # )
+        changed, self.x_rotation_value = imgui.slider_float(
+        "X rotation", self.x_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
+    
+        # imgui.text("Changed: %s, Values: %s" % (changed, value))
 
-        # # imgui.text("Changed: %s, Values: %s" % (changed, value))
+        changed, self.y_rotation_value = imgui.slider_float(
+        "Y rotation", self.y_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
+    
 
-        # changed, self.y_rotation_value = imgui.slider_float(
-        # "Y rotation", self.y_rotation_value,
-        # min_value=0.0, max_value=100.0,
-        # format="%.0f",
-        # power=0.5
-        # )
-
-        # changed, self.z_rotation_value = imgui.slider_float(
-        # "Z rotation", self.z_rotation_value,
-        # min_value=0.0, max_value=100.0,
-        # format="%.0f",
-        # power=0.5
-        # )
-
+        changed, self.z_rotation_value = imgui.slider_float(
+        "Z rotation", self.z_rotation_value,
+        min_value=0.0, max_value=100.0,
+        format="%.0f",
+        power=0.5
+        )
+        
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
                 clicked, selected = imgui.menu_item(
@@ -176,10 +180,24 @@ class UI:
                 imgui.end_menu()
 
             imgui.end_main_menu_bar()
-
         imgui.end()
-
+        
+        scale_x_val = 0.0
+        scale_y_val = 0.0
+        scale_z_val = 0.0
+        imgui.begin("Scale")
+        # changed, values = imgui.input_float4('Type here:', *values)
+        # imgui.text("Changed: %s, Values: %s" % (changed, values))
+        changed, float_val = imgui.input_float('X', scale_x_val)
+        changed, float_val = imgui.input_float('Y', scale_y_val)
+        changed, float_val = imgui.input_float('Z', scale_z_val)
+        imgui.end()
+        
         imgui.end_frame()
+        
+
+        if self.window.view['wireframe']:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
 
 class SceneViewer(pyglet.window.Window):
@@ -679,6 +697,13 @@ class SceneViewer(pyglet.window.Window):
         self.view['grid'] = not self.view['grid']
         # perform gl actions
         self.update_flags()
+
+    def draw_mouse_cursor(self):
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        super().draw_mouse_cursor()
+        if self.view['wireframe']:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
 
     def update_flags(self):
         """
