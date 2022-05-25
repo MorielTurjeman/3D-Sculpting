@@ -871,7 +871,7 @@ class SceneViewer(pyglet.window.Window):
         Pan or rotate the view.
         """
         self.switch_to()
-        if self.selected_vertices:
+        if self.selected_vertices is not None:
             self.drag_vertex()
         else:
             self.view['ball'].drag(np.array([x, y]))
@@ -1204,16 +1204,16 @@ class SceneViewer(pyglet.window.Window):
         vertices = []
         for i, m in enumerate(mask):
             if m:
-                v = geom.vertices[i]
-                d = v - sphere.center_mass
-                geom.vertices[i] += d*2
+                # v = geom.vertices[i]
+                # d = v - sphere.center_mass
+                # geom.vertices[i] += d*2
                 vertices.append(i)
 
-        # self.selected_vertices = vertices
-        # self.selected_vertex_world = [cx, cy, cz]
-        # self.selected_vertex_z = cz
+        self.selected_vertices = vertices
+        self.selected_vertex_world = [cx, cy, cz]
+        self.selected_vertex_z = cz
         # print(self.selected_vertices)
-        self.smooth(self.extend_vertex_selection(vertices))
+        # self.smooth(self.extend_vertex_selection(vertices))
 
 
 def geometry_hash(geometry):

@@ -1,11 +1,39 @@
 # from ..trimesh_test import *
 from pickletools import pyfloat
 import pyglet
+import numpy as np
 camera_size = (960, 540)
 screen_size = (1920, 1080)
-
+last_scale = None
 last_gesture = None
 lastdy=0
+
+def hand_gesture_multi_hand(left_gesture, right_gesture, left_landmark, right_landmark, ymax, xmax, depth, viewer):
+    global last_gesture
+    global lastdy
+    global last_scale
+    
+    if right_gesture is None:
+        hand_gesture_to_action(left_gesture, viewer, left_landmark, ymax, xmax, depth)
+    elif left_gesture is None:
+        hand_gesture_to_action(right_gesture, viewer, right_landmark, ymax, xmax, depth)
+    else:
+        if ((left_gesture == 'Stop' or left_gesture == 'Rotate')
+            and (right_gesture == 'Stop' or right_gesture == 'Rotate')):
+            # this is actually a scale gesture
+            left_coord = np.array(left_landmark[9])
+            right_coord = np.array(right_landmark[9])
+            scale = np.abs(left_coord, right_coord)
+            if last_gesture != 'Scale':
+                last_scale = scale
+                last_gesture = 'Scale'
+            else:
+                diff = last_scale / scale
+                print(diff)
+                viewer.scale(diff[0], diff[1], 1)
+            last_scale = scale
+        else:
+            print("Multihand development")
 
 def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
     # hand_hendler = Hand_handler()

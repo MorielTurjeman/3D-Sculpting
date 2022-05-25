@@ -114,8 +114,13 @@ def main(viewer):
 
         #  ####################################################################
         if results.multi_hand_landmarks is not None:
+            left_gesture = None
+            right_gesture = None
+            left_landmarks = None
+            right_landmarks = None
             for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
                                                   results.multi_handedness):
+                hand = handedness.classification[0].label[0:]
                 # Bounding box calculation - (x , y , x+ w , y+h)
                 brect = calc_bounding_rect(debug_image, hand_landmarks)
 
@@ -143,8 +148,17 @@ def main(viewer):
                     keypoint_classifier_labels[hand_sign_id]
                     
                 )
-                
-                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],viewer, landmark_list, *image.shape)
+
+                if hand == 'Left':
+                    left_gesture = keypoint_classifier_labels[hand_sign_id]
+                    left_landmarks = landmark_list
+                elif hand == 'Right':
+                    right_gesture = keypoint_classifier_labels[hand_sign_id]
+                    right_landmarks = landmark_list
+            
+            # hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],viewer, landmark_list, *image.shape)
+
+            hand_gesture_multi_hand(left_gesture, right_gesture, left_landmarks, right_landmarks, *image.shape, viewer)
                
 
                 
