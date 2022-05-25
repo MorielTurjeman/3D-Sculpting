@@ -43,7 +43,7 @@ def get_args():
     return args
 
 
-def main(mouse_press, mouse_move, mouse_scroll):
+def main(viewer):
     global debug_image
     # Argument parsing #################################################################
     args = get_args()
@@ -144,7 +144,7 @@ def main(mouse_press, mouse_move, mouse_scroll):
                     
                 )
                 
-                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],landmark_list[12], mouse_press, mouse_move, mouse_scroll, landmark_list, image.shape[0])
+                hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],viewer, landmark_list, *image.shape)
                
 
                 
@@ -479,9 +479,9 @@ def cv2glet(image):
     
     return pyglet_image
 
-def init_camera_window(mouse_press, mouse_move, mouse_scroll):
+def init_camera_window(viewer):
     camera_window = pyglet.window.Window()
-    main_thread = threading.Thread(target=main, args=[mouse_press, mouse_move, mouse_scroll, ])
+    main_thread = threading.Thread(target=main, args=[viewer, ])
     main_thread.start()
     @camera_window.event
     def on_draw():
