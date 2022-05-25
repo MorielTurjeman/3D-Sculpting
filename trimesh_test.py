@@ -81,7 +81,7 @@ class UI:
         self.impl.render(imgui.get_draw_data())
         imgui.new_frame()
         #set size for all the widget sliders
-        imgui.begin_child("region", 200, -50, border=False)
+        # imgui.begin_child("region", 200, -50, border=False)
 
 
         scene: Scene = self.window.scene
@@ -1313,9 +1313,3 @@ def init_3d():
 
 if __name__ == '__main__':
     init_3d()
-<<<<<<< HEAD
-    # pyglet.app.run()
-    p1 = multiprocessing.Process(target=main, args=(state,))
-=======
-    pyglet.app.run()
->>>>>>> 67cf301d05a52e318869e3efa3f4557593c41768
