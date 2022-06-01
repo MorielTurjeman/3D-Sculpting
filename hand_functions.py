@@ -1,5 +1,6 @@
 # from ..trimesh_test import *
 from pickletools import pyfloat
+from graphviz import view
 import pyglet
 import numpy as np
 camera_size = (960, 540)
@@ -7,23 +8,25 @@ screen_size = (1920, 1080)
 last_scale = None
 last_gesture = None
 lastdy=0
+selected_vertex_original_coord = None
 
 def hand_gesture_multi_hand(left_gesture, right_gesture, left_landmark, right_landmark, ymax, xmax, depth, viewer):
     global last_gesture
     global lastdy
     global last_scale
-    
+    global selected_vertex_original_coord
+
     if right_gesture is None:
-        hand_gesture_to_action(left_gesture, viewer, left_landmark, ymax, xmax, depth)
+        hande_gesture_single_hand(left_gesture, viewer, left_landmark, ymax, xmax, depth)
     elif left_gesture is None:
-        hand_gesture_to_action(right_gesture, viewer, right_landmark, ymax, xmax, depth)
+        hande_gesture_single_hand(right_gesture, viewer, right_landmark, ymax, xmax, depth)
     else:
         if ((left_gesture == 'Stop' or left_gesture == 'Rotate')
             and (right_gesture == 'Stop' or right_gesture == 'Rotate')):
             # this is actually a scale gesture
-            left_coord = np.array(left_landmark[9])
-            right_coord = np.array(right_landmark[9])
-            scale = np.abs(left_coord, right_coord)
+            left_coords = np.array(left_landmark[9])
+            right_coords = np.array(right_landmark[9])
+            scale = np.abs(left_coords, right_coords)
             if last_gesture != 'Scale':
                 last_scale = scale
                 last_gesture = 'Scale'
@@ -32,10 +35,46 @@ def hand_gesture_multi_hand(left_gesture, right_gesture, left_landmark, right_la
                 print(diff)
                 viewer.scale(diff[0], diff[1], 1)
             last_scale = scale
+        elif left_gesture == 'Pull' and right_gesture == 'Pull':
+            # this is actually move vertex
+            left_coords = np.array([left_landmark[4][0], ymax - left_landmark[4][1]])
+            right_coords = np.array([right_landmark[4][0], ymax - right_landmark[4][1]])
+
+            if last_gesture != 'Move Vertex':
+                dist = np.linalg.norm(left_coords - right_coords)
+                print(dist)
+                if  int(dist) < 20:
+                    print("dist")
+                    selected_vertex_original_coord = viewer.get_mouse_coords()
+                    last_gesture = 'Move Vertex'
+            else:
+                print("yes")
+
+                dist_left = np.linalg.norm(left_coords - selected_vertex_original_coord)
+                dist_right = np.linalg.norm(right_coords - selected_vertex_original_coord)
+                print("Moving vertex")
+
+                try:
+                    coords = left_coords if dist_left > dist_right else right_coords
+                    coords = normalize_coords(*coords, xmax, ymax, viewer)
+                    print("hello")
+                    viewer.set_mouse_position(*coords)
+                    print(coords)
+                    viewer.on_mouse_drag(*coords, 0, 0, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
+                except:
+                    pass
         else:
             print("Multihand development")
 
-def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
+def normalize_coords(x, y, xmax, ymax, viewer):
+    print("here")
+    wx, wy = viewer.get_viewport_size()
+    x = int(x / xmax * wx)
+    y = int(y / ymax * wy)
+    print("ge")
+    return x, y
+
+def hande_gesture_single_hand(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
     # hand_hendler = Hand_handler()
     global last_gesture
     global lastdy
@@ -50,7 +89,7 @@ def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth
             if abs(diff) > 3:
                 viewer.on_mouse_scroll(0,0,0, 1 if diff > 0 else -1)
                 lastdy = dy
-    elif hand_gesture == 'Rotate':
+    elif hand_gesture == 'Rotate' or hand_gesture=='Stop':
         last_coord = landmark_list[9]
         last_coord[1] = ymax - last_coord[1]
         if last_gesture != hand_gesture:
@@ -58,7 +97,7 @@ def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth
             viewer.on_mouse_press(last_coord[0], last_coord[1], pyglet.window.mouse.LEFT, 0)
         else:
             viewer.on_mouse_drag(last_coord[0], last_coord[1], 0, 0, pyglet.window.mouse.LEFT, 0)
-    elif hand_gesture == 'Rotate_Z':
+    elif hand_gesture == 'Rotate_Z' or hand_gesture=='Stop':
         last_coord = landmark_list[9]
         last_coord[1] = ymax - last_coord[1]
         if last_gesture != hand_gesture:
@@ -66,6 +105,16 @@ def hand_gesture_to_action(hand_gesture,viewer, landmark_list, ymax, xmax, depth
             viewer.on_mouse_press(last_coord[0], last_coord[1], pyglet.window.mouse.LEFT, pyglet.window.key.MOD_SHIFT)
         else:
             viewer.on_mouse_drag(last_coord[0], last_coord[1], 0, 0, pyglet.window.mouse.LEFT, 0)
+    elif hand_gesture == "Pull":
+        try:
+            coord = [landmark_list[4][0], ymax - landmark_list[4][1]]
+            coord = normalize_coords(*coord, xmax, ymax, viewer)
+            viewer.set_mouse_position(*coord)
+            viewer.on_mouse_press(*coord, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
+            last_gesture = 'Pull'
+        except:
+            pass
+
     # elif hand_gesture == 'Push':
     #     viewer.set_mouse_brush_sphere()
     #     viewer.set_mouse_position(*landmark_list[9])

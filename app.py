@@ -4,6 +4,7 @@ import csv
 import copy
 import argparse
 from distutils.log import debug
+from email.mime import image
 import itertools
 from collections import Counter
 from collections import deque
@@ -26,7 +27,7 @@ def get_args():
 
     parser.add_argument("--device", type=int, default=0)
     parser.add_argument("--width", help='cap width', type=int, default=1024)
-    parser.add_argument("--height", help='cap height', type=int, default=768)
+    parser.add_argument("--height", help='cap height', type=int, default=1024)
 
     parser.add_argument('--use_static_image_mode', action='store_true')
     parser.add_argument("--min_detection_confidence",
@@ -503,6 +504,7 @@ def init_camera_window(viewer):
         if debug_image is not None:
             pyglet_image = cv2glet(debug_image)
             pyglet_image.blit(0, 0)
+
 
     def foo(dt):
         return

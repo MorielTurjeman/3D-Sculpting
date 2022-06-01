@@ -7,6 +7,7 @@ Trimesh, Scene, PointCloud, and Path objects.
 
 Works on all major platforms: Windows, Linux, and OSX.
 """
+from copy import deepcopy
 from curses import window
 from sre_constants import CHCODES
 import sys
@@ -113,8 +114,6 @@ class UI:
         _, self.scale_z_val = imgui.input_float('Z scale', self.scale_z_val, format="%.2f")
         self.window.scale(self.scale_x_val, self.scale_y_val, self.scale_z_val)
        
-        
-
         changed, self.x_rotation_value = imgui.slider_float(
         "X rotation", self.x_rotation_value,
         min_value=0.0, max_value=100.0,
@@ -290,14 +289,12 @@ class SceneViewer(pyglet.window.Window):
         # save initial camera transform
         self._initial_camera_transform = scene.camera_transform.copy()
         self.selected_vertex = None
-        self.selected_vertex_world = None
+        self.selected_vertices_original_ccords = None
         self.selected_vertex_z = None
         
         # select mode is either vertex / sphere
         self.select_mode = 'vertex'
         self.selected_vertices = None
-
-
 
         # a transform to offset lines slightly to avoid Z-fighting
         self._line_offset = translation_matrix(
@@ -408,15 +405,15 @@ class SceneViewer(pyglet.window.Window):
         self.ui = UI(self)
 
     def set_mouse_brush_sphere(self, iter):
-        if iter==5:
-            image = pyglet.image.load('5_iterations_brush.png')
-        if iter==3:
-            image = pyglet.image.load('3_iterations_brush.png')
-        if iter==1:
-            image = pyglet.image.load('1_iterations_brush.png')
+        # if iter==5:
+        #     image = pyglet.image.load('5_iterations_brush.png')
+        # if iter==3:
+        #     image = pyglet.image.load('3_iterations_brush.png')
+        # if iter==1:
+        #     image = pyglet.image.load('1_iterations_brush.png')
 
-        cursor = pyglet.window.ImageMouseCursor(image, 8, 8)
-        self.set_mouse_cursor(cursor)
+        # cursor = pyglet.window.ImageMouseCursor(image, 8, 8)
+        # self.set_mouse_cursor(cursor)
         self.select_mode = 'sphere'
 
     def set_defult_mouse_cursor(self):
@@ -871,7 +868,8 @@ class SceneViewer(pyglet.window.Window):
         Pan or rotate the view.
         """
         self.switch_to()
-        if self.selected_vertices is not None:
+        alt = (modifiers & pyglet.window.key.MOD_ALT)
+        if alt and self.selected_vertices is not None:
             self.drag_vertex()
         else:
             self.view['ball'].drag(np.array([x, y]))
@@ -879,7 +877,7 @@ class SceneViewer(pyglet.window.Window):
 
     def on_mouse_scroll(self, x, y, dx, dy):
         """
-        Zoom the view.
+        Zoom the view.fh
         """
         self.view['ball'].scroll(dy)
         self.scene.camera_transform[...] = self.view['ball'].pose
@@ -918,7 +916,7 @@ class SceneViewer(pyglet.window.Window):
             self.scale()
         elif symbol == pyglet.window.key.ESCAPE:
             self.set_defult_mouse_cursor()
-
+        
         if symbol in [
                 pyglet.window.key.LEFT,
                 pyglet.window.key.RIGHT,
@@ -1146,11 +1144,11 @@ class SceneViewer(pyglet.window.Window):
         geom: Trimesh = scene.geometry.get('geometry_0')
         # find distance and index of closest vertex to mouse coordinates
         dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
-
+        print(dist)
         if dist < 0.1:
             self.selected_vertices = [index]
             self.selected_vertex_z = z
-            self.selected_vertex_world = coord
+            self.selected_vertices_original_ccords = [coord]
 
         print(
             f"Selecting vertex: {self.selected_vertices}")
@@ -1186,9 +1184,10 @@ class SceneViewer(pyglet.window.Window):
         x, y = self.get_mouse_coords()
         # z = self.get_z_for_coord(x, y)
         coords = gluUnProject(x, y, self.selected_vertex_z)
-        dir = np.array(coords) - np.array(self.selected_vertex_world)
-        for v in self.selected_vertices:
-            geom.vertices[v] = coords
+        vertices_copy = deepcopy(self.selected_vertices_original_ccords)
+        for idx, v in zip(self.selected_vertices, vertices_copy):
+            dir = np.array(coords) - np.array(v)
+            geom.vertices[idx] = dir + v
 
         # trimesh.smoothing.filter_taubin(geom)
         self.smooth(self.extend_vertex_selection(self.selected_vertices))
@@ -1201,18 +1200,19 @@ class SceneViewer(pyglet.window.Window):
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry['geometry_0']
         mask = sphere.contains(geom.vertices)
+        print(mask, "hello")
         vertices = []
         for i, m in enumerate(mask):
             if m:
+                print("here")
                 # v = geom.vertices[i]
                 # d = v - sphere.center_mass
                 # geom.vertices[i] += d*2
                 vertices.append(i)
 
         self.selected_vertices = vertices
-        self.selected_vertex_world = [cx, cy, cz]
+        self.selected_vertices_original_ccords = [geom.vertices[idx].copy() for idx in vertices]
         self.selected_vertex_z = cz
-        # print(self.selected_vertices)
         # self.smooth(self.extend_vertex_selection(vertices))
 
 
