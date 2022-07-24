@@ -10,6 +10,7 @@ last_gesture = None
 lastdy=0
 selected_vertex_original_coord = None
 
+
 def hand_gesture_multi_hand(left_gesture, right_gesture, left_landmark, right_landmark, ymax, xmax, depth, viewer):
     global last_gesture
     global lastdy
@@ -40,29 +41,41 @@ def hand_gesture_multi_hand(left_gesture, right_gesture, left_landmark, right_la
             left_coords = np.array([left_landmark[4][0], ymax - left_landmark[4][1]])
             right_coords = np.array([right_landmark[4][0], ymax - right_landmark[4][1]])
 
-            if last_gesture != 'Move Vertex':
-                dist = np.linalg.norm(left_coords - right_coords)
-                print(dist)
-                if  int(dist) < 20:
-                    print("dist")
-                    selected_vertex_original_coord = viewer.get_mouse_coords()
-                    last_gesture = 'Move Vertex'
-            else:
-                print("yes")
+            left_norm = normalize_coords(*left_coords, xmax, ymax, viewer)
+            right_norm = normalize_coords(*right_coords, xmax, ymax, viewer)
+            mouse_pos = np.array(selected_vertex_original_coord)
 
-                dist_left = np.linalg.norm(left_coords - selected_vertex_original_coord)
-                dist_right = np.linalg.norm(right_coords - selected_vertex_original_coord)
-                print("Moving vertex")
+            dist_left = np.linalg.norm(left_norm - mouse_pos)
+            dist_right = np.linalg.norm(right_norm - mouse_pos)
 
-                try:
-                    coords = left_coords if dist_left > dist_right else right_coords
-                    coords = normalize_coords(*coords, xmax, ymax, viewer)
-                    print("hello")
-                    viewer.set_mouse_position(*coords)
-                    print(coords)
-                    viewer.on_mouse_drag(*coords, 0, 0, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
-                except:
-                    pass
+            target_coord = left_norm if dist_left > dist_right else right_norm
+            try:
+                viewer.set_mouse_position(*target_coord)
+                viewer.on_mouse_drag(*target_coord, 0, 0, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
+            except:
+                pass
+            # if last_gesture != 'Move Vertex':
+            #     dist = np.linalg.norm(left_coords - right_coords)
+            #     print(dist)
+            #     if  int(dist) < 20:
+            #         selected_vertex_original_coord = viewer.get_mouse_coords()
+            #         last_gesture = 'Move Vertex'
+            # else:
+            #     print("yes")
+
+            #     dist_left = np.linalg.norm(left_coords - selected_vertex_original_coord)
+            #     dist_right = np.linalg.norm(right_coords - selected_vertex_original_coord)
+            #     print("Moving vertex")
+
+            #     try:
+            #         coords = left_coords if dist_left > dist_right else right_coords
+            #         coords = normalize_coords(*coords, xmax, ymax, viewer)
+            #         print("hello")
+            #         viewer.set_mouse_position(*coords)
+            #         print(coords)
+            #         viewer.on_mouse_drag(*coords, 0, 0, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
+            #     except:
+            #         pass
         else:
             print("Multihand development")
 
@@ -71,13 +84,15 @@ def normalize_coords(x, y, xmax, ymax, viewer):
     wx, wy = viewer.get_viewport_size()
     x = int(x / xmax * wx)
     y = int(y / ymax * wy)
-    print("ge")
+    print("norm: x=, y=", x,y)
     return x, y
+    
 
 def hande_gesture_single_hand(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
     # hand_hendler = Hand_handler()
     global last_gesture
     global lastdy
+    global selected_vertex_original_coord
     viewer.set_defult_mouse_cursor()
     if hand_gesture == 'Zoom':
         dy = landmark_list[8][1] - landmark_list[4][1]
@@ -107,11 +122,15 @@ def hande_gesture_single_hand(hand_gesture,viewer, landmark_list, ymax, xmax, de
             viewer.on_mouse_drag(last_coord[0], last_coord[1], 0, 0, pyglet.window.mouse.LEFT, 0)
     elif hand_gesture == "Pull":
         try:
+            print("start pull select")
             coord = [landmark_list[4][0], ymax - landmark_list[4][1]]
             coord = normalize_coords(*coord, xmax, ymax, viewer)
             viewer.set_mouse_position(*coord)
+            print("before on_mouse_press")
             viewer.on_mouse_press(*coord, pyglet.window.mouse.LEFT, pyglet.window.key.MOD_ALT)
+            print("after on_mouse_press")
             last_gesture = 'Pull'
+            selected_vertex_original_coord = coord
         except:
             pass
 

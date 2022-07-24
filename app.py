@@ -20,7 +20,9 @@ from model import KeyPointClassifier
 from hand_functions import *
 from PIL import Image
 
+
 debug_image = None
+lock = None
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -46,6 +48,7 @@ def get_args():
 
 def main(viewer):
     global debug_image
+    global lock
     # Argument parsing #################################################################
     args = get_args()
 
@@ -104,7 +107,8 @@ def main(viewer):
             break
 
         image = cv.flip(image, 1)  # Mirror display
-        debug_image = copy.deepcopy(image) #copy fliped image
+        with lock:
+            debug_image = copy.deepcopy(image) #copy fliped image
 
         # Detection implementation #
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
@@ -139,6 +143,13 @@ def main(viewer):
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
 
 
+                if hand == 'Left':
+                    left_gesture = keypoint_classifier_labels[hand_sign_id]
+                    left_landmarks = landmark_list
+                elif hand == 'Right':
+                    right_gesture = keypoint_classifier_labels[hand_sign_id]
+                    right_landmarks = landmark_list
+
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
                 debug_image = draw_landmarks(debug_image, landmark_list)
@@ -149,13 +160,6 @@ def main(viewer):
                     keypoint_classifier_labels[hand_sign_id]
                     
                 )
-
-                if hand == 'Left':
-                    left_gesture = keypoint_classifier_labels[hand_sign_id]
-                    left_landmarks = landmark_list
-                elif hand == 'Right':
-                    right_gesture = keypoint_classifier_labels[hand_sign_id]
-                    right_landmarks = landmark_list
             
             # hand_gesture_to_action(keypoint_classifier_labels[hand_sign_id],viewer, landmark_list, *image.shape)
 
@@ -480,7 +484,7 @@ def draw_info(image, fps, mode, number):
                        cv.LINE_AA)
     return image
 
-def cv2glet(image):
+def cv2glet(image) -> pyglet.image.ImageData:
     rows, cols, channels = image.shape
     raw_img = Image.fromarray(image).tobytes()
 
@@ -495,15 +499,19 @@ def cv2glet(image):
     return pyglet_image
 
 def init_camera_window(viewer):
-    camera_window = pyglet.window.Window()
+    global lock
+    camera_window = pyglet.window.Window(width=640, height=325)
+    lock = threading.Lock()
     main_thread = threading.Thread(target=main, args=[viewer, ])
     main_thread.start()
     @camera_window.event
     def on_draw():
         global debug_image
+        global lock
         if debug_image is not None:
-            pyglet_image = cv2glet(debug_image)
-            pyglet_image.blit(0, 0)
+            with lock:
+                pyglet_image = cv2glet(debug_image)
+                pyglet_image.blit(0, 0, width=640, height=325)
 
 
     def foo(dt):

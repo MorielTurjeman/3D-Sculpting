@@ -153,13 +153,16 @@ class UI:
                 clicked, selected = imgui.menu_item("Cube")
                 if clicked:
                     scene.geometry.popitem()
-                    box = trimesh.primitives.Box()
+                    box = trimesh.creation.box()
+                    box.vertices, box.faces = trimesh.remesh.subdivide_to_size(
+                        box.vertices, box.faces, 0.1)
+
                     scene.add_geometry(box)
                     self.window.reset_view()
                 clicked, selected = imgui.menu_item("Sphere")
                 if clicked:
                     scene.geometry.popitem()
-                    sphere = trimesh.primitives.Sphere()
+                    sphere = trimesh.creation.uv_sphere()
                     scene.add_geometry(sphere)
                     self.window.reset_view()
                 imgui.end_menu()
@@ -726,10 +729,11 @@ class SceneViewer(pyglet.window.Window):
         self.update_flags()
 
     def draw_mouse_cursor(self):
+        self.switch_to()
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         super().draw_mouse_cursor()
-        if self.view['wireframe']:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+        # if self.view['wireframe']:
+        #     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
 
     def update_flags(self):
@@ -737,11 +741,7 @@ class SceneViewer(pyglet.window.Window):
         Check the view flags, and call required GL functions.
         """
         # view mode, filled vs wirefrom
-        if self.view['wireframe']:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        else:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-
+        
         # set fullscreen or windowed
         self.set_fullscreen(fullscreen=self.view['fullscreen'])
 
@@ -845,7 +845,9 @@ class SceneViewer(pyglet.window.Window):
                 scene: Scene = self.scene
                 self.geom_copy = scene.geometry['geometry_0'].copy()
                 if self.select_mode == 'vertex':
+                    print("mouse_press before select vertex")
                     self.select_vertex()
+                    print("mouse_press after select vertex")
                 else:
                     self.collide_with_sphere()
             elif (ctrl and shift):
@@ -861,7 +863,10 @@ class SceneViewer(pyglet.window.Window):
 
         self.view['ball'].down(np.array([x, y]))
         
+        
         self.scene.camera_transform[...] = self.view['ball'].pose
+
+        print("finish mouse_press func")    
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         """
@@ -869,11 +874,15 @@ class SceneViewer(pyglet.window.Window):
         """
         self.switch_to()
         alt = (modifiers & pyglet.window.key.MOD_ALT)
-        if alt and self.selected_vertices is not None:
-            self.drag_vertex()
+        if alt:
+            if self.selected_vertices is not None:
+                self.drag_vertex()
         else:
-            self.view['ball'].drag(np.array([x, y]))
-            self.scene.camera_transform[...] = self.view['ball'].pose
+            try:
+                self.view['ball'].drag(np.array([x, y]))
+                self.scene.camera_transform[...] = self.view['ball'].pose
+            except:
+                pass
 
     def on_mouse_scroll(self, x, y, dx, dy):
         """
@@ -969,6 +978,13 @@ class SceneViewer(pyglet.window.Window):
         """
         Run the actual draw calls.
         """
+
+        self.switch_to()
+        if self.view['wireframe']:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+        else:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
 
         if self._profile:
             profiler = self.Profiler()
@@ -1087,7 +1103,9 @@ class SceneViewer(pyglet.window.Window):
             profiler.stop()
             print(profiler.output_text(unicode=True, color=True))
 
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         self.ui.render()
+
 
     def flip(self):
         super(SceneViewer, self).flip()
@@ -1128,30 +1146,37 @@ class SceneViewer(pyglet.window.Window):
     def get_z_for_coord(self, x, y):
         # read the pixels to identify depth of drawn pixel, if no pixel is found we will get a very 'distant' z
 
-        z0 = (GLfloat * 1)()
-        glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, z0)
+        # z0 = (GLfloat * 1)()
+        z0 = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
 
-        return z0[0]
+        return z0
 
     def select_vertex(self):
+        print("start func select vertex")
         x, y = self.get_mouse_coords()
         z = self.get_z_for_coord(x, y)
-
+        print("select vertex before glu")
         # convert pixel to world coordinates, if data is not empty, you will see 'normal' values (small sizes)
         coord = gluUnProject(x, y, z)
+        print("select vertex after glu")
 
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry.get('geometry_0')
         # find distance and index of closest vertex to mouse coordinates
         dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
         print(dist)
-        if dist < 0.1:
+        threshold = 0.1 if not self.view['wireframe'] else 0.3
+        if dist < threshold:
             self.selected_vertices = [index]
             self.selected_vertex_z = z
             self.selected_vertices_original_ccords = [coord]
-
-        print(
-            f"Selecting vertex: {self.selected_vertices}")
+        else:
+            self.selected_vertices = None
+            self.selected_vertex_z = None
+            self.selected_vertices_original_ccords = None
+            
+        print("endof func select vertex")
+        print(f"Selecting vertex: {self.selected_vertices}")
 
     def extend_vertex_selection(self, vertex_list, iterations=5):
         scene: Scene = self.scene
@@ -1175,6 +1200,7 @@ class SceneViewer(pyglet.window.Window):
         trimesh.smoothing.filter_taubin(geom, laplacian_operator=operator)
 
     def drag_vertex(self):
+        print("start drag")
         if self.selected_vertices is None:
             print("no selected vertex")
             return
@@ -1183,7 +1209,13 @@ class SceneViewer(pyglet.window.Window):
         # geom.vertices = self.geom_copy.vertices.copy()
         x, y = self.get_mouse_coords()
         # z = self.get_z_for_coord(x, y)
+        print("drag vertex before glu")
         coords = gluUnProject(x, y, self.selected_vertex_z)
+        print("drag vertex after glu")
+        if coords[0] > 100 or coords[1] > 100 or coords[2] > 100:
+            print ("after line 1210")
+            return
+        # print(coords)
         vertices_copy = deepcopy(self.selected_vertices_original_ccords)
         for idx, v in zip(self.selected_vertices, vertices_copy):
             dir = np.array(coords) - np.array(v)
@@ -1191,6 +1223,7 @@ class SceneViewer(pyglet.window.Window):
 
         # trimesh.smoothing.filter_taubin(geom)
         self.smooth(self.extend_vertex_selection(self.selected_vertices))
+        print("endof drag vertex")
 
     def collide_with_sphere(self):
         x, y = self.get_mouse_coords()
@@ -1204,7 +1237,7 @@ class SceneViewer(pyglet.window.Window):
         vertices = []
         for i, m in enumerate(mask):
             if m:
-                print("here")
+                # print("here")
                 # v = geom.vertices[i]
                 # d = v - sphere.center_mass
                 # geom.vertices[i] += d*2
@@ -1312,4 +1345,12 @@ def init_3d():
 
 
 if __name__ == '__main__':
+    # import trace
+    # tracer = trace.Trace(
+    #     ignoredirs=[sys.prefix, sys.exec_prefix, '/home/moriel99/.local/lib/python3.9/'],
+    # )
+    # tracer.run('init_3d()')
+    # r = tracer.results()
+    # r.write_results(show_missing=True, coverdir=".")
+
     init_3d()
