@@ -41,6 +41,8 @@ from trimesh.scene import Camera
 
 from trimesh.visual import to_rgba
 from trimesh.transformations import translation_matrix
+
+from gl_manager import GlManager
 #from hand_gesture_recognition.hand_functions import *
 
 pyglet.options['shadow_window'] = True
@@ -306,7 +308,7 @@ class SceneViewer(pyglet.window.Window):
         self.reset_view()
         self.batch = pyglet.graphics.Batch()
         self._smooth = smooth
-
+        
         self._profile = bool(profile)
 
         self._record = bool(record)
@@ -345,6 +347,8 @@ class SceneViewer(pyglet.window.Window):
         scale = max(resolution)
         self.line_settings = {'point_size': scale / 200,
                               'line_width': scale / 400}
+        self.gl = GlManager(scene, self.line_settings)
+
         # if we've been passed line settings override the default
         if line_settings is not None:
             self.line_settings.update(line_settings)
@@ -385,7 +389,8 @@ class SceneViewer(pyglet.window.Window):
         self._update_vertex_list()
 
         # call after geometry is added
-        self.init_gl()
+        # self.init_gl()
+        self.gl.reset_gl()
         self.set_size(*resolution)
         if flags is not None:
             self.reset_view(flags=flags)
@@ -443,7 +448,7 @@ class SceneViewer(pyglet.window.Window):
         if self.callback is not None:
             self.callback(self.scene)
         self._update_vertex_list()
-        self._update_perspective(self.width, self.height)
+        self.gl.set_modelview_matrix(self.width, self.height)
 
     def add_geometry(self, name, geometry, **kwargs):
         """
@@ -561,134 +566,6 @@ class SceneViewer(pyglet.window.Window):
         except BaseException:
             pass
 
-    def init_gl(self):
-        """
-        Perform the magic incantations to create an
-        OpenGL scene using pyglet.
-        """
-
-        # if user passed a background color use it
-        if self.background is None:
-            # default background color is white
-            background = np.ones(4)
-        else:
-            # convert to (4,) uint8 RGBA
-            background = to_rgba(self.background)
-            # convert to 0.0-1.0 float
-            background = background.astype(np.float64) / 255.0
-
-        self._gl_set_background(background)
-        # use camera setting for depth
-        self._gl_enable_depth(self.scene.camera)
-        self._gl_enable_color_material()
-        self._gl_enable_blending()
-        self._gl_enable_smooth_lines(**self.line_settings)
-        self._gl_enable_lighting(self.scene)
-
-    @staticmethod
-    def _gl_set_background(background):
-        gl.glClearColor(*background)
-
-    @staticmethod
-    def _gl_unset_background():
-        gl.glClearColor(*[0, 0, 0, 0])
-
-    @staticmethod
-    def _gl_enable_depth(camera):
-        """
-        Enable depth test in OpenGL using distances
-        from `scene.camera`.
-        """
-        # set the culling depth from our camera object
-        gl.glDepthRange(camera.z_near, camera.z_far)
-
-        gl.glClearDepth(1.0)
-        gl.glEnable(gl.GL_DEPTH_TEST)
-        gl.glDepthFunc(gl.GL_LEQUAL)
-
-        gl.glEnable(gl.GL_DEPTH_TEST)
-        gl.glEnable(gl.GL_CULL_FACE)
-
-    @staticmethod
-    def _gl_enable_color_material():
-        # do some openGL things
-        gl.glColorMaterial(gl.GL_FRONT_AND_BACK,
-                           gl.GL_AMBIENT_AND_DIFFUSE)
-        gl.glEnable(gl.GL_COLOR_MATERIAL)
-        gl.glShadeModel(gl.GL_SMOOTH)
-
-        gl.glMaterialfv(gl.GL_FRONT,
-                        gl.GL_AMBIENT,
-                        rendering.vector_to_gl(
-                            0.192250, 0.192250, 0.192250))
-        gl.glMaterialfv(gl.GL_FRONT,
-                        gl.GL_DIFFUSE,
-                        rendering.vector_to_gl(
-                            0.507540, 0.507540, 0.507540))
-        gl.glMaterialfv(gl.GL_FRONT,
-                        gl.GL_SPECULAR,
-                        rendering.vector_to_gl(
-                            .5082730, .5082730, .5082730))
-
-        gl.glMaterialf(gl.GL_FRONT,
-                       gl.GL_SHININESS,
-                       .4 * 128.0)
-
-    @staticmethod
-    def _gl_enable_blending():
-        # enable blending for transparency
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA,
-                       gl.GL_ONE_MINUS_SRC_ALPHA)
-
-    @staticmethod
-    def _gl_enable_smooth_lines(line_width=4, point_size=4):
-        # make the lines from Path3D objects less ugly
-        gl.glEnable(gl.GL_LINE_SMOOTH)
-        gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
-        # set the width of lines to 4 pixels
-        gl.glLineWidth(line_width)
-        # set PointCloud markers to 4 pixels in size
-        gl.glPointSize(point_size)
-
-    @staticmethod
-    def _gl_enable_lighting(scene):
-        """
-        Take the lights defined in scene.lights and
-        apply them as openGL lights.
-        """
-        gl.glEnable(gl.GL_LIGHTING)
-        # opengl only supports 7 lights?
-        for i, light in enumerate(scene.lights[:7]):
-            # the index of which light we have
-            lightN = eval('gl.GL_LIGHT{}'.format(i))
-
-            # get the transform for the light by name
-            matrix = scene.graph.get(light.name)[0]
-
-            # convert light object to glLightfv calls
-            multiargs = rendering.light_to_gl(
-                light=light,
-                transform=matrix,
-                lightN=lightN)
-
-            # enable the light in question
-            gl.glEnable(lightN)
-            # run the glLightfv calls
-            for args in multiargs:
-                gl.glLightfv(*args)
-
-    def toggle_culling(self):
-        """
-        Toggle back face culling.
-
-        It is on by default but if you are dealing with
-        non- watertight meshes you probably want to be able
-        to see the back sides.
-        """
-        self.view['cull'] = not self.view['cull']
-        self.update_flags()
-
     def toggle_wireframe(self):
         """
         Toggle wireframe mode
@@ -696,13 +573,6 @@ class SceneViewer(pyglet.window.Window):
         Good for  looking inside meshes, off by default.
         """
         self.view['wireframe'] = not self.view['wireframe']
-        self.update_flags()
-
-    def toggle_fullscreen(self):
-        """
-        Toggle between fullscreen and windowed mode.
-        """
-        self.view['fullscreen'] = not self.view['fullscreen']
         self.update_flags()
 
     def toggle_axis(self):
@@ -732,8 +602,6 @@ class SceneViewer(pyglet.window.Window):
         self.switch_to()
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         super().draw_mouse_cursor()
-        # if self.view['wireframe']:
-        #     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
 
     def update_flags(self):
@@ -741,92 +609,13 @@ class SceneViewer(pyglet.window.Window):
         Check the view flags, and call required GL functions.
         """
         # view mode, filled vs wirefrom
-        
-        # set fullscreen or windowed
-        self.set_fullscreen(fullscreen=self.view['fullscreen'])
-
-        # backface culling on or off
-        if self.view['cull']:
-            gl.glEnable(gl.GL_CULL_FACE)
-        else:
-            gl.glDisable(gl.GL_CULL_FACE)
-
-        # case where we WANT an axis and NO vertexlist
-        # is stored internally
-        if self.view['axis'] and self._axis is None:
-            from trimesh import creation
-            # create an axis marker sized relative to the scene
-            axis = creation.axis(origin_size=self.scene.scale / 100)
-            # create ordered args for a vertex list
-            args = rendering.mesh_to_vertexlist(axis)
-            # store the axis as a reference
-            self._axis = self.batch.add_indexed(*args)
-        # case where we DON'T want an axis but a vertexlist
-        # IS stored internally
-        elif not self.view['axis'] and self._axis is not None:
-            # remove the axis from the rendering batch
-            self._axis.delete()
-            # set the reference to None
-            self._axis = None
-
-        if self.view['grid'] and self._grid is None:
-            try:
-                # create a grid marker
-                from trimesh.path.creation import grid
-                bounds = self.scene.bounds
-                center = bounds.mean(axis=0)
-                # set the grid to the lowest Z position
-                # also offset by the scale to avoid interference
-                center[2] = bounds[0][2] - (bounds[:, 2].ptp() / 100)
-                # choose the side length by maximum XY length
-                side = bounds.ptp(axis=0)[:2].max()
-                # create an axis marker sized relative to the scene
-                grid_mesh = grid(
-                    side=side,
-                    count=4,
-                    transform=translation_matrix(center))
-                # convert the path to vertexlist args
-                args = rendering.convert_to_vertexlist(grid_mesh)
-                # create ordered args for a vertex list
-                self._grid = self.batch.add_indexed(*args)
-            except BaseException:
-                util.log.warning(
-                    'failed to create grid!', exc_info=True)
-        elif not self.view['grid'] and self._grid is not None:
-            self._grid.delete()
-            self._grid = None
-
-    def _update_perspective(self, width, height):
-        try:
-            # for high DPI screens viewport size
-            # will be different then the passed size
-            width, height = self.get_viewport_size()
-        except BaseException:
-            # older versions of pyglet may not have this
-            pass
-
-        # set the new viewport size
-        gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadIdentity()
-
-        # get field of view and Z range from camera
-        camera = self.scene.camera
-
-        # set perspective from camera data
-        gl.gluPerspective(camera.fov[1],
-                          width / float(height),
-                          camera.z_near,
-                          camera.z_far)
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-
-        return width, height
+        gl.glEnable(gl.GL_CULL_FACE)
 
     def on_resize(self, width, height):
         """
         Handle resized windows.
         """
-        width, height = self._update_perspective(width, height)
+        width, height = self.gl.set_modelview_matrix(width, height)
         self.scene.camera.resolution = (width, height)
         self.view['ball'].resize(self.scene.camera.resolution)
         self.scene.camera_transform[...] = self.view['ball'].pose
@@ -903,8 +692,6 @@ class SceneViewer(pyglet.window.Window):
             self.toggle_wireframe()
         elif symbol == pyglet.window.key.Z:
             self.reset_view()
-        elif symbol == pyglet.window.key.C:
-            self.toggle_culling()
         elif symbol == pyglet.window.key.A:
             self.toggle_axis()
         elif symbol == pyglet.window.key.G:
@@ -913,8 +700,6 @@ class SceneViewer(pyglet.window.Window):
             self.on_close()
         elif symbol == pyglet.window.key.M:
             self.maximize()
-        elif symbol == pyglet.window.key.F:
-            self.toggle_fullscreen()
         elif symbol == pyglet.window.key.S:
             self.select_vertex()
         elif symbol == pyglet.window.key.L:
