@@ -42,6 +42,8 @@ from trimesh.scene import Camera
 from trimesh.visual import to_rgba
 from trimesh.transformations import translation_matrix
 
+from state_manager import StateManager
+
 from gl_manager import GlManager
 #from hand_gesture_recognition.hand_functions import *
 
@@ -216,7 +218,7 @@ class UI:
         imgui.end_frame()
         
 
-        if self.window.view['wireframe']:
+        if self.window.state.internal_state['wireframe']:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
 
@@ -251,7 +253,7 @@ class SceneViewer(pyglet.window.Window):
         smooth : bool
           If True try to smooth shade things
         flags : dict
-          If passed apply keys to self.view:
+          If passed apply keys to self.state.view:
           ['cull', 'wireframe', etc]
         visible : bool
           Display window or not
@@ -545,23 +547,24 @@ class SceneViewer(pyglet.window.Window):
           If any view key passed override the default
           e.g. {'cull': False}
         """
-        self.view = {
-            'cull': True,
-            'axis': False,
-            'grid': False,
-            'fullscreen': False,
-            'wireframe': False,
-            'ball': Trackball(
-                pose=self._initial_camera_transform,
-                size=self.scene.camera.resolution,
-                scale=self.scene.scale,
-                target=self.scene.centroid)}
+        self.state = StateManager(self.scene)
+        # self.state.view = {
+        #     'cull': True,
+        #     'axis': False,
+        #     'grid': False,
+        #     'fullscreen': False,
+        #     'wireframe': False,
+        #     'ball': Trackball(
+        #         pose=self._initial_camera_transform,
+        #         size=self.scene.camera.resolution,
+        #         scale=self.scene.scale,
+        #         target=self.scene.centroid)}
         try:
             # if any flags are passed override defaults
             if isinstance(flags, dict):
                 for k, v in flags.items():
-                    if k in self.view:
-                        self.view[k] = v
+                    if k in self.state.internal_state:
+                        self.state.internal_state[k] = v
                 self.update_flags()
         except BaseException:
             pass
@@ -572,7 +575,7 @@ class SceneViewer(pyglet.window.Window):
 
         Good for  looking inside meshes, off by default.
         """
-        self.view['wireframe'] = not self.view['wireframe']
+        self.state.internal_state['wireframe'] = not self.state.internal_state['wireframe']
         self.update_flags()
 
     def toggle_axis(self):
@@ -583,9 +586,9 @@ class SceneViewer(pyglet.window.Window):
         # cycle through three axis states
         states = [False, 'world', 'all', 'without_world']
         # the state after toggling
-        index = (states.index(self.view['axis']) + 1) % len(states)
+        index = (states.index(self.state.internal_state['axis']) + 1) % len(states)
         # update state to next index
-        self.view['axis'] = states[index]
+        self.state.internal_state['axis'] = states[index]
         # perform gl actions
         self.update_flags()
 
@@ -594,7 +597,7 @@ class SceneViewer(pyglet.window.Window):
         Toggle a rendered grid.
         """
         # update state to next index
-        self.view['grid'] = not self.view['grid']
+        self.state.internal_state['grid'] = not self.state.internal_state['grid']
         # perform gl actions
         self.update_flags()
 
@@ -617,15 +620,15 @@ class SceneViewer(pyglet.window.Window):
         """
         width, height = self.gl.set_modelview_matrix(width, height)
         self.scene.camera.resolution = (width, height)
-        self.view['ball'].resize(self.scene.camera.resolution)
-        self.scene.camera_transform[...] = self.view['ball'].pose
+        self.state.internal_state['ball'].resize(self.scene.camera.resolution)
+        self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
     def on_mouse_press(self, x, y, buttons, modifiers):
         """
         Set the start point of the drag.
         """
         self.switch_to()
-        self.view['ball'].set_state(Trackball.STATE_ROTATE)
+        self.state.internal_state['ball'].set_state(Trackball.STATE_ROTATE)
         if (buttons == pyglet.window.mouse.LEFT):
             ctrl = (modifiers & pyglet.window.key.MOD_CTRL)
             shift = (modifiers & pyglet.window.key.MOD_SHIFT)
@@ -640,20 +643,20 @@ class SceneViewer(pyglet.window.Window):
                 else:
                     self.collide_with_sphere()
             elif (ctrl and shift):
-                self.view['ball'].set_state(Trackball.STATE_ZOOM)
+                self.state.internal_state['ball'].set_state(Trackball.STATE_ZOOM)
             elif shift:
-                self.view['ball'].set_state(Trackball.STATE_ROLL)
+                self.state.internal_state['ball'].set_state(Trackball.STATE_ROLL)
             elif ctrl:
-                self.view['ball'].set_state(Trackball.STATE_PAN)
+                self.state.internal_state['ball'].set_state(Trackball.STATE_PAN)
         elif (buttons == pyglet.window.mouse.MIDDLE):
-            self.view['ball'].set_state(Trackball.STATE_PAN)
+            self.state.internal_state['ball'].set_state(Trackball.STATE_PAN)
         elif (buttons == pyglet.window.mouse.RIGHT):
-            self.view['ball'].set_state(Trackball.STATE_ZOOM)
+            self.state.internal_state['ball'].set_state(Trackball.STATE_ZOOM)
 
-        self.view['ball'].down(np.array([x, y]))
+        self.state.internal_state['ball'].down(np.array([x, y]))
         
         
-        self.scene.camera_transform[...] = self.view['ball'].pose
+        self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
         print("finish mouse_press func")    
 
@@ -668,8 +671,8 @@ class SceneViewer(pyglet.window.Window):
                 self.drag_vertex()
         else:
             try:
-                self.view['ball'].drag(np.array([x, y]))
-                self.scene.camera_transform[...] = self.view['ball'].pose
+                self.state.internal_state['ball'].drag(np.array([x, y]))
+                self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
             except:
                 pass
 
@@ -677,8 +680,8 @@ class SceneViewer(pyglet.window.Window):
         """
         Zoom the view.fh
         """
-        self.view['ball'].scroll(dy)
-        self.scene.camera_transform[...] = self.view['ball'].pose
+        self.state.internal_state['ball'].scroll(dy)
+        self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
     def on_mouse_release(self, x, y, button, modifiers):
         self.selected_vertices = None
@@ -716,16 +719,16 @@ class SceneViewer(pyglet.window.Window):
                 pyglet.window.key.RIGHT,
                 pyglet.window.key.DOWN,
                 pyglet.window.key.UP]:
-            self.view['ball'].down([0, 0])
+            self.state.internal_state['ball'].down([0, 0])
             if symbol == pyglet.window.key.LEFT:
-                self.view['ball'].drag([-magnitude, 0])
+                self.state.internal_state['ball'].drag([-magnitude, 0])
             elif symbol == pyglet.window.key.RIGHT:
-                self.view['ball'].drag([magnitude, 0])
+                self.state.internal_state['ball'].drag([magnitude, 0])
             elif symbol == pyglet.window.key.DOWN:
-                self.view['ball'].drag([0, -magnitude])
+                self.state.internal_state['ball'].drag([0, -magnitude])
             elif symbol == pyglet.window.key.UP:
-                self.view['ball'].drag([0, magnitude])
-            self.scene.camera_transform[...] = self.view['ball'].pose
+                self.state.internal_state['ball'].drag([0, magnitude])
+            self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
     def scale(self, x, y, z):
         scene: Scene = self.scene
@@ -765,7 +768,7 @@ class SceneViewer(pyglet.window.Window):
         """
 
         self.switch_to()
-        if self.view['wireframe']:
+        if self.state.internal_state['wireframe']:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         else:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -793,7 +796,7 @@ class SceneViewer(pyglet.window.Window):
         count = -1
 
         # if we are rendering an axis marker at the world
-        if self._axis and not self.view['axis'] == 'without_world':
+        if self._axis and not self.state.internal_state['axis'] == 'without_world':
             # we stored it as a vertex list
             self._axis.draw(mode=gl.GL_TRIANGLES)
         if self._grid:
@@ -849,9 +852,9 @@ class SceneViewer(pyglet.window.Window):
             gl.glMultMatrixf(rendering.matrix_to_gl(transform))
 
             # draw an axis marker for each mesh frame
-            if self.view['axis'] == 'all':
+            if self.state.internal_state['axis'] == 'all':
                 self._axis.draw(mode=gl.GL_TRIANGLES)
-            elif self.view['axis'] == 'without_world':
+            elif self.state.internal_state['axis'] == 'without_world':
                 if not util.allclose(transform, np.eye(4), atol=1e-5):
                     self._axis.draw(mode=gl.GL_TRIANGLES)
 
@@ -950,7 +953,7 @@ class SceneViewer(pyglet.window.Window):
         # find distance and index of closest vertex to mouse coordinates
         dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
         print(dist)
-        threshold = 0.1 if not self.view['wireframe'] else 0.3
+        threshold = 0.1 if not self.state.internal_state['wireframe'] else 0.3
         if dist < threshold:
             self.selected_vertices = [index]
             self.selected_vertex_z = z
