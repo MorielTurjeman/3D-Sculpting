@@ -770,8 +770,8 @@ class SceneViewer(pyglet.window.Window):
         self.switch_to()
         if self.state.internal_state['wireframe']:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        else:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        # else:
+        #     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
         if self._profile:
