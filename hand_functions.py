@@ -88,7 +88,7 @@ def normalize_coords(x, y, xmax, ymax, viewer):
     return x, y
     
 
-def hande_gesture_single_hand(hand_gesture,viewer, landmark_list, ymax, xmax, depth):
+def hande_gesture_single_hand(hand_gesture,viewer: pyglet.window.Window, landmark_list, ymax, xmax, depth):
     # hand_hendler = Hand_handler()
     global last_gesture
     global lastdy
@@ -133,7 +133,13 @@ def hande_gesture_single_hand(hand_gesture,viewer, landmark_list, ymax, xmax, de
             selected_vertex_original_coord = coord
         except:
             pass
-
+    elif hand_gesture == 'Choose':
+        try:
+            coord = landmark_list[8]
+            coord = normalize_coords(*coord, xmax, ymax, viewer)
+            viewer.on_mouse_press(*coord, pyglet.window.mouse.LEFT, 0)
+        except:
+            pass
     # elif hand_gesture == 'Push':
     #     viewer.set_mouse_brush_sphere()
     #     viewer.set_mouse_position(*landmark_list[9])

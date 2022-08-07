@@ -14,6 +14,7 @@ import sys
 import threading
 import multiprocessing
 import collections
+from cv2 import gemm
 # from graphviz import view
 import numpy as np
 import scipy
@@ -72,14 +73,16 @@ class UI:
         self.window: SceneViewer = window
         self.test_input = 0
         self.checkbox_smoothing = False
-        self.x_rotation_value = 50
-        self.y_rotation_value = 50
-        self.z_rotation_value = 50
+        self.x_rotation_value = 0
+        self.y_rotation_value = 0
+        self.z_rotation_value = 0
         self.scale_x_val = 1.0
         self.scale_y_val = 1.0
         self.scale_z_val = 1.0
+        self.ignore_clicks = False
 
     def render(self):
+        self.ignore_clicks = False
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         imgui.render()
         io = imgui.get_io()
@@ -90,6 +93,9 @@ class UI:
 
 
         scene: Scene = self.window.scene
+        geometry: Trimesh = scene.geometry.get('geometry_0')
+        trans = np.identity((4), dtype=np.float64)
+    
 
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
 
@@ -117,33 +123,48 @@ class UI:
         _, self.scale_y_val = imgui.input_float('Y scale', self.scale_y_val, format="%.2f")
         _, self.scale_z_val = imgui.input_float('Z scale', self.scale_z_val, format="%.2f")
         self.window.scale(self.scale_x_val, self.scale_y_val, self.scale_z_val)
+
        
-        changed, self.x_rotation_value = imgui.slider_float(
+        changed, x_rotation_value = imgui.slider_float(
         "X rotation", self.x_rotation_value,
-        min_value=0.0, max_value=100.0,
+        min_value=-180, max_value=180.0,
         format="%.0f",
         power=0.5
         )
-    
+        self.ignore_clicks = self.ignore_clicks or imgui.is_item_active()
+        r = np.deg2rad(x_rotation_value - self.x_rotation_value)
+        self.x_rotation_value = x_rotation_value
+        # print(r)
+        if changed:
+            trans = np.dot(trans, np.array(
+                [
+                    [np.cos(r), 0, -1 * np.sin(r), 0 ],
+                    [0, 1, 0, 0],
+                    [np.sin(r), 0, np.cos(r), 0],
+                    [0, 0, 0, 1]
+                ], dtype=np.float64
+            ))
+            geometry.apply_transform(trans)
         # imgui.text("Changed: %s, Values: %s" % (changed, value))
 
         changed, self.y_rotation_value = imgui.slider_float(
         "Y rotation", self.y_rotation_value,
-        min_value=0.0, max_value=100.0,
+        min_value=-360, max_value=360.0,
         format="%.0f",
         power=0.5
         )
+        self.ignore_clicks = self.ignore_clicks or imgui.is_item_active()
+
     
 
         changed, self.z_rotation_value = imgui.slider_float(
         "Z rotation", self.z_rotation_value,
-        min_value=0.0, max_value=100.0,
+        min_value=-360, max_value=360.0,
         format="%.0f",
         power=0.5
         )
+        self.ignore_clicks = self.ignore_clicks or imgui.is_item_active()
         # imgui.end_child()
-
-
 
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
@@ -548,17 +569,6 @@ class SceneViewer(pyglet.window.Window):
           e.g. {'cull': False}
         """
         self.state = StateManager(self.scene)
-        # self.state.view = {
-        #     'cull': True,
-        #     'axis': False,
-        #     'grid': False,
-        #     'fullscreen': False,
-        #     'wireframe': False,
-        #     'ball': Trackball(
-        #         pose=self._initial_camera_transform,
-        #         size=self.scene.camera.resolution,
-        #         scale=self.scene.scale,
-        #         target=self.scene.centroid)}
         try:
             # if any flags are passed override defaults
             if isinstance(flags, dict):
@@ -665,6 +675,8 @@ class SceneViewer(pyglet.window.Window):
         Pan or rotate the view.
         """
         self.switch_to()
+        if self.ui.ignore_clicks:
+            return
         alt = (modifiers & pyglet.window.key.MOD_ALT)
         if alt:
             if self.selected_vertices is not None:
@@ -1025,10 +1037,6 @@ class SceneViewer(pyglet.window.Window):
         vertices = []
         for i, m in enumerate(mask):
             if m:
-                # print("here")
-                # v = geom.vertices[i]
-                # d = v - sphere.center_mass
-                # geom.vertices[i] += d*2
                 vertices.append(i)
 
         self.selected_vertices = vertices
