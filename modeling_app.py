@@ -226,6 +226,7 @@ class UI:
             imgui.end_main_menu_bar()
 
         imgui.text("Welcome to 3D Sculpting!")
+        imgui.text("To beign, select a shape from the 'Primitives' menu above")
         
 
         imgui.end()
