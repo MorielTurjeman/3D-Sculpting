@@ -227,6 +227,7 @@ class UI:
 
         imgui.text("Welcome to 3D Sculpting!")
         imgui.text("To beign, select a shape from the 'Primitives' menu above")
+        imgui.text("After selecting a shape, you can use either your hands or the mouse to shape the object and control the view")
         
 
         imgui.end()
