@@ -229,6 +229,7 @@ class UI:
         imgui.text("To beign, select a shape from the 'Primitives' menu above")
         imgui.text("After selecting a shape, you can use either your hands or the mouse to shape the object and control the view")
         imgui.text("To zoom and or out on the object- use the mouse scroll")
+        imgui.text("To switch to wireframe mode- click on 'W' on the keyboard")
         
 
         imgui.end()
