@@ -224,6 +224,10 @@ class UI:
                 imgui.end_menu()
 
             imgui.end_main_menu_bar()
+
+        imgui.text("Welcome to 3D Sculpting!")
+        
+
         imgui.end()
         
        
@@ -235,6 +239,7 @@ class UI:
         # # changed, float_val = imgui.input_float('Z', self.scale_z_val)
         # # self.window.scale(flo, self.scale_y_val, self.scale_z_val)
         # imgui.end()
+
         
         imgui.end_frame()
         
