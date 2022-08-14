@@ -231,6 +231,7 @@ class UI:
         imgui.text("To zoom and or out on the object- use the mouse scroll")
         imgui.text("To switch to wireframe mode- click on 'W' on the keyboard")
         imgui.text("To pick and edge and strech it...")
+        imgui.text("Finally, to export your work...")
 
         imgui.end()
         
