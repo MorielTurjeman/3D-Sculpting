@@ -680,8 +680,7 @@ class SceneViewer(pyglet.window.Window):
             self.state.internal_state['ball'].set_state(Trackball.STATE_ZOOM)
 
         self.state.internal_state['ball'].down(np.array([x, y]))
-        
-        
+                
         self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
         print("finish mouse_press func")    
