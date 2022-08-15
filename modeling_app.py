@@ -237,8 +237,10 @@ class UI:
         imgui.text("Press 'M' to maximize view")
         imgui.text("Press 'S' to select a vertex")
         imgui.text("Press 'L' to drag the selected vertex")
+        imgui.text("Press 'P' to collide with sphere")
+        imgui.text("Press 'I' to scale")
+        imgui.text("Press ESCAPE to bring the cursor back to the center of the screen")
         
-
         imgui.end()
         
        
@@ -250,11 +252,9 @@ class UI:
         # # changed, float_val = imgui.input_float('Z', self.scale_z_val)
         # # self.window.scale(flo, self.scale_y_val, self.scale_z_val)
         # imgui.end()
-
         
         imgui.end_frame()
         
-
         if self.window.state.internal_state['wireframe']:
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
