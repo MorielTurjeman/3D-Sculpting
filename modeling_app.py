@@ -230,6 +230,10 @@ class UI:
         imgui.text("After selecting a shape, you can use either your hands or the mouse to shape the object and control the view")
         imgui.text("To zoom and or out on the object- use the mouse scroll")
         imgui.text("Press 'W' to enbale or disable wireframe mode")
+        imgui.text("Press 'Z' to reset the view")
+        imgui.text("Press 'A' to toggle the axis view")
+        imgui.text("Press 'W' to toggle grid view")
+        imgui.text("Press 'Q' to quit the program")
         
 
         imgui.end()
