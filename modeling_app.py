@@ -236,6 +236,7 @@ class UI:
         imgui.text("Press 'Q' to quit the program")
         imgui.text("Press 'M' to maximize view")
         imgui.text("Press 'S' to select a vertex")
+        imgui.text("Press 'L' to drag the selected vertex")
         
 
         imgui.end()
