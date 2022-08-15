@@ -235,6 +235,7 @@ class UI:
         imgui.text("Press 'W' to toggle grid view")
         imgui.text("Press 'Q' to quit the program")
         imgui.text("Press 'M' to maximize view")
+        imgui.text("Press 'S' to select a vertex")
         
 
         imgui.end()
