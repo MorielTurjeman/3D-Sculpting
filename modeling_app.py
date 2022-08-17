@@ -220,16 +220,16 @@ class UI:
                     self.window.reset_view()
                 imgui.end_menu()
 
-            if imgui.begin_menu("Actions", True):
-                clicked, selected = imgui.menu_item("Strech in")
-                if clicked:
-                    # //call strech in function
-                    pass
-                clicked, selected = imgui.menu_item("Strech out")
-                if clicked:
-                    # //call strech out function
-                    pass
-                imgui.end_menu()
+            # if imgui.begin_menu("Actions", True):
+            #     clicked, selected = imgui.menu_item("Strech in")
+            #     if clicked:
+            #         # //call strech in function
+            #         pass
+            #     clicked, selected = imgui.menu_item("Strech out")
+            #     if clicked:
+            #         # //call strech out function
+            #         pass
+            #     imgui.end_menu()
 
             if imgui.begin_menu("Mode", True):
                 clicked, selected = imgui.menu_item("Hands")
