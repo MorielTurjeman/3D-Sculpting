@@ -242,14 +242,14 @@ class UI:
             #         pass
             #     imgui.end_menu()
 
-            if imgui.begin_menu("Project", True):
-                clicked, selected = imgui.menu_item("Start over")
-                if clicked:
-                    self.window.reset_view()
-                clicked, selected = imgui.menu_item("Quit")
-                if clicked:
-                    sys.exit(0)
-                imgui.end_menu()
+            # if imgui.begin_menu("Project", True):
+            #     clicked, selected = imgui.menu_item("Start over")
+            #     if clicked:
+            #         self.window.reset_view()
+            #     clicked, selected = imgui.menu_item("Quit")
+            #     if clicked:
+            #         sys.exit(0)
+            #     imgui.end_menu()
 
             imgui.end_main_menu_bar()
 
