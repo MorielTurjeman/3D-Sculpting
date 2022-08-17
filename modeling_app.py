@@ -36,6 +36,7 @@ import trimesh.collision
 import trimesh.ray
 import trimesh.creation
 import trimesh.remesh
+
 from trimesh import Trimesh, util
 from trimesh import rendering, Scene
 from trimesh.scene import Camera
@@ -65,7 +66,6 @@ class UI:
         self.renderer = PygletRenderer(window)
         self.impl = PygletRenderer(window)
         imgui.new_frame()
-
         imgui.end_frame()
 
         # Window variables
@@ -91,7 +91,6 @@ class UI:
         #set size for all the widget sliders
         # imgui.begin_child("region", 200, -50, border=False)
 
-
         scene: Scene = self.window.scene
         geometry: Trimesh = scene.geometry.get('geometry_0')
         trans = np.identity((4), dtype=np.float64)
@@ -99,55 +98,43 @@ class UI:
 
         imgui.begin("Design Window", flags=imgui.WINDOW_MENU_BAR)
 
+        if imgui.begin_popup("File Saved"):
+            imgui.text("File saved to scene.stl")
+            imgui.end_popup()
 
-       
-        imgui.text("Brushes!!!")
-        if (imgui.button("Brush 1")):
-            self.window.set_mouse_brush_sphere(1)
-        if imgui.button("Brush 2"):
-            self.window.set_mouse_brush_sphere(3)
-        if imgui.button("Brush 3"):
-            self.window.set_mouse_brush_sphere(5)
+        if imgui.button("Save"):
+            scene.export(file_obj="scene.stl", file_type="stl")
+            imgui.open_popup("File Saved")
 
-        # if checkbox_smoothing:
-        _, self.checkbox_smoothing = imgui.checkbox(
-            "Smoothing", self.checkbox_smoothing)  # create smoothign
+        if imgui.button("Zoom in"):
+            self.window.on_mouse_scroll(0, 0, 0, 1)
+        if imgui.button("Zoom out"):
+            self.window.on_mouse_scroll(0, 0, 0, -1)
+    
+        if imgui.button("Stretch Horizontal"):
+            self.window.scale(1.1, 1 ,1)
+        if imgui.button("Redact Horizontal"):
+            self.window.scale(1/1.1, 1, 1)
 
-        imgui.button("Zoom in")
-        imgui.button("Zoom out")
-        imgui.button("Strech in")
-        imgui.button("Strech out")
-        #set size for all the widget sliders
-        # imgui.begin_child("region", 200, -50, border=False)
-        _, self.scale_x_val = imgui.input_float('X scale', self.scale_x_val, format="%.2f")
-        _, self.scale_y_val = imgui.input_float('Y scale', self.scale_y_val, format="%.2f")
-        _, self.scale_z_val = imgui.input_float('Z scale', self.scale_z_val, format="%.2f")
-        self.window.scale(self.scale_x_val, self.scale_y_val, self.scale_z_val)
+        if imgui.button("Stretch Vertical"):
+            self.window.scale(1, 1.1, 1)
+        if imgui.button("Redact Horizontal"):
+            self.window.scale(1, 1/1.1, 1)
+        
+        if imgui.button("Stretch Z"):
+            self.window.scale(1, 1, 1.1)
+        if imgui.button("Redact Z"):
+            self.window.scale(1, 1, 1/1.1)
 
-       
-        changed, x_rotation_value = imgui.slider_float(
+        x_changed, x_rotation_value = imgui.slider_float(
         "X rotation", self.x_rotation_value,
-        min_value=-180, max_value=180.0,
+        min_value=-360, max_value=360.0,
         format="%.0f",
         power=0.5
         )
         self.ignore_clicks = self.ignore_clicks or imgui.is_item_active()
-        r = np.deg2rad(x_rotation_value - self.x_rotation_value)
-        self.x_rotation_value = x_rotation_value
-        # print(r)
-        if changed:
-            trans = np.dot(trans, np.array(
-                [
-                    [np.cos(r), 0, -1 * np.sin(r), 0 ],
-                    [0, 1, 0, 0],
-                    [np.sin(r), 0, np.cos(r), 0],
-                    [0, 0, 0, 1]
-                ], dtype=np.float64
-            ))
-            geometry.apply_transform(trans)
-        # imgui.text("Changed: %s, Values: %s" % (changed, value))
-
-        changed, self.y_rotation_value = imgui.slider_float(
+        
+        y_changed, y_rotation_value = imgui.slider_float(
         "Y rotation", self.y_rotation_value,
         min_value=-360, max_value=360.0,
         format="%.0f",
@@ -157,7 +144,7 @@ class UI:
 
     
 
-        changed, self.z_rotation_value = imgui.slider_float(
+        z_changed, z_rotation_value = imgui.slider_float(
         "Z rotation", self.z_rotation_value,
         min_value=-360, max_value=360.0,
         format="%.0f",
@@ -165,6 +152,47 @@ class UI:
         )
         self.ignore_clicks = self.ignore_clicks or imgui.is_item_active()
         # imgui.end_child()
+
+        if x_changed:
+            r = np.deg2rad(x_rotation_value - self.x_rotation_value)
+            trans = np.dot(trans, np.array(
+                [
+                    [np.cos(r), 0, -1 * np.sin(r), 0 ],
+                    [0, 1, 0, 0],
+                    [np.sin(r), 0, np.cos(r), 0],
+                    [0, 0, 0, 1]
+                ], dtype=np.float64
+            ))
+            geometry.apply_transform(trans)
+            self.x_rotation_value = x_rotation_value
+
+        
+        if y_changed:
+            r = np.deg2rad(y_rotation_value - self.y_rotation_value)
+            trans = np.dot(trans, np.array(
+                [
+                    [1, 0, 0, 0],
+                    [0, np.cos(r), -1 * np.sin(r), 0],
+                    [0, np.sin(r), np.cos(r), 0],
+                    [0, 0, 0, 1]
+                ]
+            ))
+            geometry.apply_transform(trans)
+            self.y_rotation_value = y_rotation_value
+
+        if z_changed:
+            r = np.deg2rad(z_rotation_value - self.z_rotation_value)
+            trans = np.dot(trans, np.array(
+                [
+                    [np.cos(r), -1 * np.sin(r), 0, 0],
+                    [np.sin(r), np.cos(r), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]
+                ]
+            ))
+            geometry.apply_transform(trans)
+            self.z_rotation_value = z_rotation_value
+
 
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("Primitives", True):
@@ -1048,7 +1076,6 @@ class SceneViewer(pyglet.window.Window):
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry['geometry_0']
         mask = sphere.contains(geom.vertices)
-        print(mask, "hello")
         vertices = []
         for i, m in enumerate(mask):
             if m:
