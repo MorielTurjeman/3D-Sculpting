@@ -231,16 +231,16 @@ class UI:
             #         pass
             #     imgui.end_menu()
 
-            if imgui.begin_menu("Mode", True):
-                clicked, selected = imgui.menu_item("Hands")
-                if clicked:
-                    #
-                    pass
-                clicked, selected = imgui.menu_item("Mouse")
-                if clicked:
-                    #
-                    pass
-                imgui.end_menu()
+            # if imgui.begin_menu("Mode", True):
+            #     clicked, selected = imgui.menu_item("Hands")
+            #     if clicked:
+            #         #
+            #         pass
+            #     clicked, selected = imgui.menu_item("Mouse")
+            #     if clicked:
+            #         #
+            #         pass
+            #     imgui.end_menu()
 
             if imgui.begin_menu("Project", True):
                 clicked, selected = imgui.menu_item("Start over")
