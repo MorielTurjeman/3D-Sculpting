@@ -259,14 +259,9 @@ class UI:
         imgui.text("To zoom and or out on the object- use the mouse scroll")
         imgui.text("Press 'W' to enbale or disable wireframe mode")
         imgui.text("Press 'Z' to reset the view")
-        imgui.text("Press 'A' to toggle the axis view")
-        imgui.text("Press 'W' to toggle grid view")
         imgui.text("Press 'Q' to quit the program")
-        imgui.text("Press 'M' to maximize view")
         imgui.text("Press 'S' to select a vertex")
         imgui.text("Press 'L' to drag the selected vertex")
-        imgui.text("Press 'P' to collide with sphere")
-        imgui.text("Press 'I' to scale")
         imgui.text("Press ESCAPE to bring the cursor back to the center of the screen")
         
         imgui.end()
@@ -750,22 +745,12 @@ class SceneViewer(pyglet.window.Window):
             self.toggle_wireframe()
         elif symbol == pyglet.window.key.Z:
             self.reset_view()
-        elif symbol == pyglet.window.key.A:
-            self.toggle_axis()
-        elif symbol == pyglet.window.key.G:
-            self.toggle_grid()
         elif symbol == pyglet.window.key.Q:
             self.on_close()
-        elif symbol == pyglet.window.key.M:
-            self.maximize()
         elif symbol == pyglet.window.key.S:
             self.select_vertex()
         elif symbol == pyglet.window.key.L:
             self.drag_vertex()
-        elif symbol == pyglet.window.key.P:
-            self.collide_with_sphere()
-        elif symbol == pyglet.window.key.I:
-            self.scale()
         elif symbol == pyglet.window.key.ESCAPE:
             self.set_defult_mouse_cursor()
         
