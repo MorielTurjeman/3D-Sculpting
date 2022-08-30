@@ -686,9 +686,7 @@ class SceneViewer(pyglet.window.Window):
                 scene: Scene = self.scene
                 self.geom_copy = scene.geometry['geometry_0'].copy()
                 if self.select_mode == 'vertex':
-                    print("mouse_press before select vertex")
                     self.select_vertex()
-                    print("mouse_press after select vertex")
                 else:
                     self.collide_with_sphere()
             elif (ctrl and shift):
@@ -706,7 +704,6 @@ class SceneViewer(pyglet.window.Window):
                 
         self.scene.camera_transform[...] = self.state.internal_state['ball'].pose
 
-        print("finish mouse_press func")    
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         """
@@ -795,7 +792,6 @@ class SceneViewer(pyglet.window.Window):
         for i, v in enumerate(geom.vertices):
             dist = float(np.linalg.norm(v - coord))
             if dist < 0.1:
-                print(f"here {i}")
                 selected = i
 
         # print vertex
@@ -929,7 +925,7 @@ class SceneViewer(pyglet.window.Window):
 
         if self._profile:
             profiler.stop()
-            print(profiler.output_text(unicode=True, color=True))
+            # print(profiler.output_text(unicode=True, color=True))
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         self.ui.render()
@@ -980,19 +976,15 @@ class SceneViewer(pyglet.window.Window):
         return z0
 
     def select_vertex(self):
-        print("start func select vertex")
         x, y = self.get_mouse_coords()
         z = self.get_z_for_coord(x, y)
-        print("select vertex before glu")
         # convert pixel to world coordinates, if data is not empty, you will see 'normal' values (small sizes)
         coord = gluUnProject(x, y, z)
-        print("select vertex after glu")
-
+        
         scene: Scene = self.scene
         geom: Trimesh = scene.geometry.get('geometry_0')
         # find distance and index of closest vertex to mouse coordinates
         dist, index = scipy.spatial.KDTree(geom.vertices).query(coord)
-        print(dist)
         threshold = 0.1 if not self.state.internal_state['wireframe'] else 0.3
         if dist < threshold:
             self.selected_vertices = [index]
@@ -1003,7 +995,6 @@ class SceneViewer(pyglet.window.Window):
             self.selected_vertex_z = None
             self.selected_vertices_original_ccords = None
             
-        print("endof func select vertex")
         print(f"Selecting vertex: {self.selected_vertices}")
 
     def extend_vertex_selection(self, vertex_list, iterations=5):
