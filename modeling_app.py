@@ -1019,7 +1019,6 @@ class SceneViewer(pyglet.window.Window):
         trimesh.smoothing.filter_taubin(geom, laplacian_operator=operator)
 
     def drag_vertex(self):
-        print("start drag")
         if self.selected_vertices is None:
             print("no selected vertex")
             return
@@ -1028,9 +1027,7 @@ class SceneViewer(pyglet.window.Window):
         # geom.vertices = self.geom_copy.vertices.copy()
         x, y = self.get_mouse_coords()
         # z = self.get_z_for_coord(x, y)
-        print("drag vertex before glu")
         coords = gluUnProject(x, y, self.selected_vertex_z)
-        print("drag vertex after glu")
         if coords[0] > 100 or coords[1] > 100 or coords[2] > 100:
             print ("after line 1210")
             return
@@ -1042,7 +1039,6 @@ class SceneViewer(pyglet.window.Window):
 
         # trimesh.smoothing.filter_taubin(geom)
         self.smooth(self.extend_vertex_selection(self.selected_vertices))
-        print("endof drag vertex")
 
     def collide_with_sphere(self):
         x, y = self.get_mouse_coords()
